@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatoshiNostr — Sovereign Debt Protocol</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-dim: #a8872a;
+            --gold-glow: rgba(212,175,55,0.08);
+            --black: #050505;
+            --dark: #0a0a0a;
+            --darker: #080808;
+            --text: #c8c8c8;
+            --text-dim: #555;
+            --red: #cc2200;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { background: var(--black); color: var(--text); font-family: 'Space Mono', monospace; overflow-x: hidden; }
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+            pointer-events: none; z-index: 1000;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 60px 20px; position: relative;
+            border-bottom: 1px solid #151515;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 35%, rgba(212,175,55,0.07) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .ticker {
+            font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #333;
+            letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 48px;
+            opacity: 0; animation: fadeUp 0.6s ease 0.1s forwards;
+        }
+        .eyebrow {
+            font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold);
+            letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 20px;
+            opacity: 0; animation: fadeUp 0.6s ease 0.3s forwards;
+        }
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(80px, 16vw, 180px);
+            line-height: 0.88; color: var(--gold);
+            text-shadow: 0 0 60px rgba(212,175,55,0.25), 0 0 120px rgba(212,175,55,0.08);
+            opacity: 0; animation: fadeUp 0.8s ease 0.5s forwards;
+            margin-bottom: 12px;
+        }
+        .hero-sub {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(20px, 3.5vw, 40px); color: #333; letter-spacing: 0.2em;
+            opacity: 0; animation: fadeUp 0.6s ease 0.7s forwards; margin-bottom: 56px;
+        }
+        .debt-display {
+            margin-bottom: 12px; opacity: 0; animation: fadeUp 0.6s ease 0.9s forwards;
+        }
+        .debt-label {
+            font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim);
+            letter-spacing: 0.15em; margin-bottom: 6px;
+        }
+        .debt-number {
+            font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 7vw, 72px);
+            color: var(--red); line-height: 1;
+            text-shadow: 0 0 40px rgba(204,34,0,0.3);
+        }
+        .debt-source {
+            font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #2a2a2a;
+            letter-spacing: 0.2em; margin-bottom: 56px;
+            opacity: 0; animation: fadeUp 0.6s ease 1s forwards;
+        }
+        .cta-wrap { opacity: 0; animation: fadeUp 0.6s ease 1.1s forwards; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .btn-primary {
+            display: inline-block; background: var(--gold); color: var(--black);
+            font-family: 'Share Tech Mono', monospace; font-size: 12px; font-weight: 700;
+            letter-spacing: 0.25em; text-transform: uppercase; text-decoration: none;
+            padding: 18px 52px; transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .btn-primary:hover { background: #e8c43d; transform: translateY(-2px); box-shadow: 0 8px 40px rgba(212,175,55,0.35); }
+        .btn-ghost {
+            font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim);
+            text-decoration: none; letter-spacing: 0.2em; border-bottom: 1px solid #222;
+            padding-bottom: 2px; transition: color 0.2s, border-color 0.2s;
+        }
+        .btn-ghost:hover { color: var(--gold); border-color: var(--gold); }
+
+        /* STATS */
+        .stats {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            background: var(--darker); border-bottom: 1px solid #151515;
+        }
+        .stat { text-align: center; padding: 20px 40px; border-right: 1px solid #151515; }
+        .stat:last-child { border-right: none; }
+        .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold); display: block; line-height: 1; }
+        .stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; display: block; }
+
+        /* SECTIONS */
+        .section { max-width: 960px; margin: 0 auto; padding: 80px 24px; }
+        .sec-label {
+            font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold);
+            letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sec-label::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
+        .sec-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 72px); color: #fff; line-height: 0.95; margin-bottom: 40px; }
+
+        /* BENEFITS */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; }
+        .card { background: var(--dark); padding: 32px; position: relative; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
+        .card.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
+        .card:hover { background: #0d0d0d; }
+        .card-num { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: #151515; position: absolute; top: 12px; right: 20px; line-height: 1; }
+        .card-title { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+        .card-text { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+
+        /* PRICING */
+        .pricing-box { border: 1px solid #151515; background: var(--dark); padding: 40px; }
+        .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #151515; margin-bottom: 32px; }
+        .tier { background: var(--dark); padding: 28px; position: relative; opacity: 0; transform: translateY(20px); }
+        .tier.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .tier.hot { background: var(--gold-glow); border: 1px solid rgba(212,175,55,0.3); }
+        .tier-badge { position: absolute; top: -10px; left: 16px; background: var(--gold); color: var(--black); font-family: 'Share Tech Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 10px; }
+        .tier-n { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+        .tier-range { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 16px; }
+        .tier-desc { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); line-height: 1.7; }
+        .tier-desc strong { color: var(--gold); }
+        .formula-note { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center; border-top: 1px solid #151515; padding-top: 24px; line-height: 1.9; }
+        .formula-note strong { color: var(--gold); }
+
+        /* STEPS */
+        .steps { display: flex; flex-direction: column; gap: 1px; background: #151515; border: 1px solid #151515; }
+        .step { background: var(--dark); padding: 28px 32px; display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: start; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
+        .step.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
+        .step:hover { background: #0d0d0d; }
+        .step-n { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: #1a1a1a; line-height: 1; }
+        .step h3 { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+        .step p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+
+        /* VERIFY */
+        .verify-box { background: var(--darker); border: 1px solid #151515; padding: 40px; text-align: center; margin-top: 48px; }
+        .verify-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 16px; }
+        .verify-id { font-family: 'Share Tech Mono', monospace; font-size: clamp(7px, 1.1vw, 10px); color: #444; word-break: break-all; padding: 16px; background: var(--black); border: 1px solid #151515; margin-bottom: 20px; line-height: 1.8; }
+        .verify-link { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 2px; transition: all 0.2s; letter-spacing: 0.1em; }
+        .verify-link:hover { color: #fff; border-color: #fff; }
+
+        /* CTA BOTTOM */
+        .cta-bottom { background: var(--darker); border-top: 1px solid #151515; text-align: center; padding: 80px 24px; }
+        .cta-bottom .sec-label { justify-content: center; }
+        .cta-big { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 10vw, 112px); color: var(--gold); line-height: 0.9; margin: 24px 0; text-shadow: 0 0 60px rgba(212,175,55,0.2); }
+        .cta-bottom p { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); max-width: 440px; margin: 0 auto 40px; line-height: 1.9; }
+
+        /* FOOTER */
+        footer { border-top: 1px solid #111; padding: 28px 24px; text-align: center; }
+        footer p { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #282828; letter-spacing: 0.15em; line-height: 2; }
+        footer a { color: #333; text-decoration: none; transition: color 0.2s; }
+        footer a:hover { color: var(--gold); }
+
+        hr { border: none; border-top: 1px solid #111; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+        .cursor::after { content: '_'; animation: blink 1s step-end infinite; color: var(--gold); }
+
+        @media (max-width: 600px) {
+            .tiers { grid-template-columns: 1fr; }
+            .stat { padding: 16px 20px; }
+            .step { grid-template-columns: 1fr; gap: 6px; }
+            .step-n { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <p class="ticker">[ SOVEREIGN PROTOCOL V1.0 — FOUNDER PHASE — 499 / 500 NODES AVAILABLE ]</p>
+    <p class="eyebrow">Nostr × Bitcoin × Lightning</p>
+    <h1 class="hero-title">SATOSHI<br>NOSTR</h1>
+    <p class="hero-sub">Sovereign Debt Protocol</p>
+    <div class="debt-display">
+        <p class="debt-label">THE STATE ISSUED THIS MUCH DEBT IN YOUR NAME:</p>
+        <p class="debt-number" id="debt-val">€35,597</p>
+    </div>
+    <p class="debt-source">SOURCE: BANCO DE ESPAÑA BIEST API — <span id="debt-src">LIVE</span></p>
+    <div class="cta-wrap">
+        <a href="https://nostrdebt.github.io/emisorcontratos/" class="btn-primary">Claim Your Founder Node →</a>
+        <a href="#how" class="btn-ghost">How it works ↓</a>
+    </div>
+</section>
+
+<div class="stats">
+    <div class="stat"><span class="stat-val">500</span><span class="stat-lbl">Total Founder Nodes</span></div>
+    <div class="stat"><span class="stat-val">499</span><span class="stat-lbl">Still Available</span></div>
+    <div class="stat"><span class="stat-val">~99</span><span class="stat-lbl">Nodes Under 100 Sats</span></div>
+    <div class="stat"><span class="stat-val" id="block-h">---</span><span class="stat-lbl">Bitcoin Block Height</span></div>
+</div>
+
+<hr>
+
+<div class="section">
+    <p class="sec-label">What you get</p>
+    <h2 class="sec-title">TANGIBLE.<br>IMMEDIATE.<br>PERMANENT.</h2>
+    <div class="grid">
+        <div class="card">
+            <div class="card-num">01</div>
+            <p class="card-title">A Unique Number</p>
+            <p class="card-text">One of only 500 in existence. Mathematically impossible to duplicate, forge, or replicate. Yours — cryptographically, permanently.</p>
+        </div>
+        <div class="card">
+            <div class="card-num">02</div>
+            <p class="card-title">A Cypherpunk Certificate</p>
+            <p class="card-text">A PDF — dark background, gold text, monospaced font — with your node number, the sovereign debt figure, your Bitcoin block timestamp, and a Nostr event ID.</p>
+        </div>
+        <div class="card">
+            <div class="card-num">03</div>
+            <p class="card-title">Nostr Registration</p>
+            <p class="card-text">Your contract is published as a Kind 30068 event on Nostr. Signed by the Oracle's cryptographic key. Immutable. Verifiable by anyone, forever.</p>
+        </div>
+        <div class="card">
+            <div class="card-num">04</div>
+            <p class="card-title">Position in Scarcity</p>
+            <p class="card-text">Lower nodes are rarer and cost more. You are buying a number in a finite sequence no authority can alter. There will never be a node #501.</p>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="section">
+    <p class="sec-label">Pricing</p>
+    <h2 class="sec-title">YOU CHOOSE<br>YOUR POSITION.</h2>
+    <div class="pricing-box">
+        <div class="tiers">
+            <div class="tier">
+                <div class="tier-n">100</div>
+                <div class="tier-range">NODES #1 — #100</div>
+                <div class="tier-desc">From <strong>1 BTC</strong> to <strong>100 BTC</strong><br>The genesis tier. The most scarce.<br>For those who understand first-mover value.</div>
+            </div>
+            <div class="tier">
+                <div class="tier-n">300</div>
+                <div class="tier-range">NODES #101 — #400</div>
+                <div class="tier-desc">From <strong>100 sats</strong> to <strong>~1 BTC</strong><br>The mid-tier. Accessible.<br>A meaningful position at a reasonable cost.</div>
+            </div>
+            <div class="tier hot">
+                <div class="tier-badge">⚡ From 1 sat</div>
+                <div class="tier-n">~99</div>
+                <div class="tier-range">NODES #401 — #499</div>
+                <div class="tier-desc">From <strong>1 sat</strong> to <strong>100 sats</strong><br>Your first Lightning transaction.<br>A sovereign document for the cost of almost nothing.</div>
+            </div>
+            <div class="tier">
+                <div class="tier-n">#1</div>
+                <div class="tier-range">THE GENESIS NODE</div>
+                <div class="tier-desc">Cost: <strong>100 BTC</strong><br>The rarest object in the protocol.<br>There is only one. There will only ever be one.</div>
+            </div>
+        </div>
+        <div class="formula-note">
+            The price is set by an <strong>exponential decay algorithm</strong> — not by the Oracle. No one can change it.<br>
+            No one can create more than 500. Ever.<br><br>
+            <strong>f(n) = 10¹⁰ × e^(−0.046144 × (n−1))</strong>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="section" id="how">
+    <p class="sec-label">How it works</p>
+    <h2 class="sec-title">FOUR STEPS.<br>IMMUTABLE RESULT.</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-n">01</div>
+            <div>
+                <h3>Choose your node</h3>
+                <p>Select any number between 1 and 500. The price is calculated instantly by the protocol's exponential decay formula. No negotiation. No intermediary.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-n">02</div>
+            <div>
+                <h3>Pay via Lightning</h3>
+                <p>Scan the QR with any Lightning wallet. No KYC. No account. No personal data. The payment confirms in seconds.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-n">03</div>
+            <div>
+                <h3>Receive your certificate</h3>
+                <p>The moment payment is confirmed, your cypherpunk PDF certificate downloads automatically. Dark background. Gold text. Your number. Your timestamp. Yours.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-n">04</div>
+            <div>
+                <h3>Verify on Nostr forever</h3>
+                <p>Your contract is registered on Nostr as a Kind 30068 event — signed by the Oracle. Anyone can verify it. No one can delete it.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="section">
+    <p class="sec-label">Proof of work</p>
+    <h2 class="sec-title">CONTRACT #1<br>ALREADY EXISTS.</h2>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.9;max-width:560px">
+        The Genesis Contract was registered on Nostr on March 18, 2026 at 16:56:07 GMT.<br>
+        It cannot be modified. It cannot be deleted. Verify it yourself, right now.
+    </p>
+    <div class="verify-box">
+        <p class="verify-lbl">Nostr Event ID — Kind 30068</p>
+        <div class="verify-id">970bb8ebf7c0365225246669bfcba41376389763d20158998acc4175bae865ad</div>
+        <a href="https://njump.me/970bb8ebf7c0365225246669bfcba41376389763d20158998acc4175bae865ad" target="_blank" class="verify-link">Verify on njump.me →</a>
+    </div>
+</div>
+
+<hr>
+
+<div class="cta-bottom">
+    <p class="sec-label" style="justify-content:center">499 nodes remaining</p>
+    <p class="cta-big">CLAIM<br>YOUR NODE<span class="cursor"></span></p>
+    <p>Nearly 100 nodes cost less than 100 sats.<br>Your first sovereign act costs almost nothing.<br>The number you choose is yours forever.</p>
+    <a href="https://nostrdebt.github.io/emisorcontratos/" class="btn-primary">Open the Protocol →</a>
+</div>
+
+<footer>
+    <p>
+        SATOSHINOSTR PROTOCOL V1.0 &nbsp;·&nbsp;
+        <a href="https://nostrdebt.github.io/emisorcontratos/">Launch App</a> &nbsp;·&nbsp;
+        <a href="https://github.com/NostrDebt/emisorcontratos" target="_blank">GitHub</a> &nbsp;·&nbsp;
+        <a href="https://bitcointalk.org/index.php?topic=5569237.0" target="_blank">BitcoinTalk</a> &nbsp;·&nbsp;
+        <a href="https://njump.me/npub1ja465murtsks05k20828puvs6pqc0eld2xs95vfqmnz8wgseu3cqjdn27e" target="_blank">Nostr</a>
+    </p>
+    <p style="margin-top:12px">SOVEREIGNTY IS NOT REQUESTED. IT IS EXERCISED.</p>
+</footer>
+
+<script>
+    // Live debt
+    fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU')
+        .then(r => r.json())
+        .then(data => {
+            const pct = parseFloat(data[0].valor);
+            const d = (pct / 100 * 1460000000000) / 42327164;
+            document.getElementById('debt-val').innerText = d.toLocaleString('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        })
+        .catch(() => { document.getElementById('debt-src').innerText = 'FALLBACK'; });
+
+    // Live block height
+    fetch('https://mempool.space/api/blocks/tip/height')
+        .then(r => r.text())
+        .then(h => { document.getElementById('block-h').innerText = parseInt(h).toLocaleString(); })
+        .catch(() => {});
+
+    // Scroll reveal
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.card, .tier, .step').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
