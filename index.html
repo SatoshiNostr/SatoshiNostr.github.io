@@ -27,7 +27,6 @@
             pointer-events: none; z-index: 1000;
         }
 
-        /* HERO */
         .hero {
             min-height: 100vh; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
@@ -42,7 +41,9 @@
         .ticker { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #333; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 48px; opacity: 0; animation: fadeUp 0.6s ease 0.1s forwards; }
         .eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.6s ease 0.3s forwards; }
         .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(80px, 16vw, 180px); line-height: 0.88; color: var(--gold); text-shadow: 0 0 60px rgba(212,175,55,0.25), 0 0 120px rgba(212,175,55,0.08); opacity: 0; animation: fadeUp 0.8s ease 0.5s forwards; margin-bottom: 12px; }
-        .hero-sub { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px, 3.5vw, 40px); color: #333; letter-spacing: 0.2em; opacity: 0; animation: fadeUp 0.6s ease 0.7s forwards; margin-bottom: 56px; }
+        .hero-sub { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px, 3.5vw, 40px); color: #333; letter-spacing: 0.2em; opacity: 0; animation: fadeUp 0.6s ease 0.7s forwards; margin-bottom: 40px; }
+        .hero-tagline { font-family: 'Share Tech Mono', monospace; font-size: clamp(11px, 1.8vw, 14px); color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 48px; line-height: 1.7; max-width: 560px; opacity: 0; animation: fadeUp 0.6s ease 0.85s forwards; }
+        .hero-tagline strong { color: var(--gold); }
         .debt-display { margin-bottom: 12px; opacity: 0; animation: fadeUp 0.6s ease 0.9s forwards; }
         .debt-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 6px; }
         .debt-number { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 7vw, 72px); color: var(--red); line-height: 1; text-shadow: 0 0 40px rgba(204,34,0,0.3); }
@@ -53,20 +54,17 @@
         .btn-ghost { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.2em; border-bottom: 1px solid #222; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
         .btn-ghost:hover { color: var(--gold); border-color: var(--gold); }
 
-        /* STATS */
         .stats { display: flex; flex-wrap: wrap; justify-content: center; background: var(--darker); border-bottom: 1px solid #151515; }
         .stat { text-align: center; padding: 20px 40px; border-right: 1px solid #151515; }
         .stat:last-child { border-right: none; }
         .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold); display: block; line-height: 1; }
         .stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; display: block; }
 
-        /* SECTIONS */
         .section { max-width: 960px; margin: 0 auto; padding: 80px 24px; }
         .sec-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
         .sec-label::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
         .sec-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 72px); color: #fff; line-height: 0.95; margin-bottom: 40px; }
 
-        /* BENEFITS */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; }
         .card { background: var(--dark); padding: 32px; position: relative; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
         .card.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
@@ -74,20 +72,13 @@
         .card-num { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: #151515; position: absolute; top: 12px; right: 20px; line-height: 1; }
         .card-title { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
         .card-text { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
-        .card-badge { display: inline-block; background: var(--gold); color: var(--black); font-family: 'Share Tech Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 8px; margin-bottom: 12px; }
 
-        /* V2 BANNER */
-        .v2-banner {
-            background: #0d0d0d; border: 1px solid #1a1a1a;
-            border-left: 3px solid var(--gold);
-            padding: 32px 40px; margin-top: 48px;
-        }
+        .v2-banner { background: #0d0d0d; border: 1px solid #1a1a1a; border-left: 3px solid var(--gold); padding: 32px 40px; margin-top: 48px; }
         .v2-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 0.35em; text-transform: uppercase; margin-bottom: 12px; }
         .v2-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 52px); color: #fff; line-height: 1; margin-bottom: 16px; }
         .v2-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.9; max-width: 640px; }
         .v2-text strong { color: var(--gold); }
 
-        /* FOUNDER PRIVILEGES */
         .privileges { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-top: 32px; }
         .priv { background: var(--dark); padding: 28px; opacity: 0; transform: translateY(20px); }
         .priv.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
@@ -95,7 +86,6 @@
         .priv-title { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
         .priv-text { font-size: 11px; color: var(--text-dim); line-height: 1.8; }
 
-        /* PRICING */
         .pricing-box { border: 1px solid #151515; background: var(--dark); padding: 40px; }
         .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #151515; margin-bottom: 32px; }
         .tier { background: var(--dark); padding: 28px; position: relative; opacity: 0; transform: translateY(20px); }
@@ -109,7 +99,6 @@
         .formula-note { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center; border-top: 1px solid #151515; padding-top: 24px; line-height: 1.9; }
         .formula-note strong { color: var(--gold); }
 
-        /* STEPS */
         .steps { display: flex; flex-direction: column; gap: 1px; background: #151515; border: 1px solid #151515; }
         .step { background: var(--dark); padding: 28px 32px; display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: start; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
         .step.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
@@ -118,20 +107,35 @@
         .step h3 { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
         .step p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
 
-        /* VERIFY */
         .verify-box { background: var(--darker); border: 1px solid #151515; padding: 40px; text-align: center; margin-top: 48px; }
         .verify-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 16px; }
         .verify-id { font-family: 'Share Tech Mono', monospace; font-size: clamp(7px, 1.1vw, 10px); color: #444; word-break: break-all; padding: 16px; background: var(--black); border: 1px solid #151515; margin-bottom: 20px; line-height: 1.8; }
         .verify-link { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 2px; transition: all 0.2s; letter-spacing: 0.1em; }
         .verify-link:hover { color: #fff; border-color: #fff; }
 
-        /* CTA BOTTOM */
+        /* FORK SECTION */
+        .fork-section { background: #08080f; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 60px 24px; text-align: center; }
+        .fork-inner { max-width: 720px; margin: 0 auto; }
+        .fork-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .fork-label::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
+        .fork-label::after { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
+        .fork-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 64px); color: #fff; line-height: 0.95; margin-bottom: 24px; }
+        .fork-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.9; margin-bottom: 32px; }
+        .fork-text strong { color: var(--gold); }
+        .debt-countries { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; background: #151515; border: 1px solid #151515; margin: 32px 0; }
+        .country { background: var(--dark); padding: 16px 24px; text-align: center; }
+        .country-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); display: block; }
+        .country-debt { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .fork-cta { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-bottom: 20px; }
+        .fork-cta strong { color: var(--gold); }
+        .btn-fork { display: inline-block; border: 1px solid var(--gold); color: var(--gold); font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; padding: 14px 36px; transition: all 0.2s; }
+        .btn-fork:hover { background: var(--gold); color: var(--black); }
+
         .cta-bottom { background: var(--darker); border-top: 1px solid #151515; text-align: center; padding: 80px 24px; }
         .cta-bottom .sec-label { justify-content: center; }
         .cta-big { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 10vw, 112px); color: var(--gold); line-height: 0.9; margin: 24px 0; text-shadow: 0 0 60px rgba(212,175,55,0.2); }
         .cta-bottom p { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); max-width: 480px; margin: 0 auto 40px; line-height: 1.9; }
 
-        /* FOOTER */
         footer { border-top: 1px solid #111; padding: 28px 24px; text-align: center; }
         footer p { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #282828; letter-spacing: 0.15em; line-height: 2; }
         footer a { color: #333; text-decoration: none; transition: color 0.2s; }
@@ -149,6 +153,7 @@
             .step { grid-template-columns: 1fr; gap: 6px; }
             .step-n { font-size: 28px; }
             .v2-banner { padding: 24px; }
+            .debt-countries { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -159,6 +164,10 @@
     <p class="eyebrow">Nostr × Bitcoin × Lightning</p>
     <h1 class="hero-title">SATOSHI<br>NOSTR</h1>
     <p class="hero-sub">Sovereign Debt Protocol</p>
+    <p class="hero-tagline">
+        <strong>Bitcoin gave you sovereignty over your money.</strong><br>
+        SatoshiNostr gives you sovereignty over your debt.
+    </p>
     <div class="debt-display">
         <p class="debt-label">THE STATE ISSUED THIS MUCH DEBT IN YOUR NAME:</p>
         <p class="debt-number" id="debt-val">€35,597</p>
@@ -179,7 +188,6 @@
 
 <hr>
 
-<!-- WHAT YOU GET -->
 <div class="section">
     <p class="sec-label">What you get today</p>
     <h2 class="sec-title">TANGIBLE.<br>IMMEDIATE.<br>PERMANENT.</h2>
@@ -209,7 +217,6 @@
 
 <hr>
 
-<!-- FOUNDER PRIVILEGES + V2 -->
 <div class="section" id="founder">
     <p class="sec-label">Founder vs V2</p>
     <h2 class="sec-title">THE FIRST 500.<br>BEFORE SPAIN<br>CLAIMS IT BACK.</h2>
@@ -248,7 +255,6 @@
 
 <hr>
 
-<!-- PRICING -->
 <div class="section">
     <p class="sec-label">Pricing</p>
     <h2 class="sec-title">YOU CHOOSE<br>YOUR POSITION.</h2>
@@ -278,7 +284,7 @@
         </div>
         <div class="formula-note">
             The price is set by an <strong>exponential decay algorithm</strong> — not by the Oracle.<br>
-            No one can change it. The first 500 Founder Nodes are the only ones with these privileges.<br><br>
+            The first 500 Founder Nodes are the only ones with these privileges.<br><br>
             <strong>f(n) = 10¹⁰ × e^(−0.046144 × (n−1))</strong>
         </div>
     </div>
@@ -286,7 +292,6 @@
 
 <hr>
 
-<!-- HOW IT WORKS -->
 <div class="section" id="how">
     <p class="sec-label">How it works</p>
     <h2 class="sec-title">FOUR STEPS.<br>IMMUTABLE RESULT.</h2>
@@ -309,7 +314,7 @@
             <div class="step-n">03</div>
             <div>
                 <h3>Receive your certificate</h3>
-                <p>The moment payment is confirmed, your cypherpunk PDF certificate downloads automatically. Dark background. Gold text. Your number. Your timestamp. Yours.</p>
+                <p>The moment payment is confirmed, your cypherpunk PDF certificate downloads automatically. Dark background. Gold text. Your number. Your timestamp. Yours forever.</p>
             </div>
         </div>
         <div class="step">
@@ -324,7 +329,6 @@
 
 <hr>
 
-<!-- VERIFY -->
 <div class="section">
     <p class="sec-label">Proof of work</p>
     <h2 class="sec-title">CONTRACT #1<br>ALREADY EXISTS.</h2>
@@ -341,7 +345,32 @@
 
 <hr>
 
-<!-- CTA BOTTOM -->
+<!-- FORK FOR YOUR COUNTRY -->
+<div class="fork-section">
+    <div class="fork-inner">
+        <p class="fork-label">Open Source · Copyleft</p>
+        <h2 class="fork-title">BUILT FOR SPAIN.<br>DESIGNED FOR THE WORLD.</h2>
+        <p class="fork-text">
+            Sovereign debt is not a Spanish problem. It is a universal one.<br><br>
+            This protocol is <strong>open source and copyleft</strong>. Any activist, developer, or citizen
+            in any country can fork it, replace the debt API with their central bank's data,
+            and deploy their own sovereign protocol. <strong>No permission needed. Ever.</strong>
+        </p>
+        <div class="debt-countries">
+            <div class="country"><span class="country-name">🇪🇸 Spain</span><span class="country-debt">~€35,597 / citizen</span></div>
+            <div class="country"><span class="country-name">🇮🇹 Italy</span><span class="country-debt">~€45,000 / citizen</span></div>
+            <div class="country"><span class="country-name">🇫🇷 France</span><span class="country-debt">~€40,000 / citizen</span></div>
+            <div class="country"><span class="country-name">🇺🇸 USA</span><span class="country-debt">~$100,000 / citizen</span></div>
+            <div class="country"><span class="country-name">🇯🇵 Japan</span><span class="country-debt">~$90,000 / citizen</span></div>
+            <div class="country"><span class="country-name">🌍 Your country</span><span class="country-debt">Fork it. Deploy it.</span></div>
+        </div>
+        <p class="fork-cta">Spain has <strong>Contract #1</strong>.<br>What country will have <strong>Contract #2</strong>?</p>
+        <a href="https://github.com/NostrDebt/emisorcontratos" target="_blank" class="btn-fork">Fork on GitHub →</a>
+    </div>
+</div>
+
+<hr>
+
 <div class="cta-bottom">
     <p class="sec-label" style="justify-content:center">499 Founder Nodes remaining</p>
     <p class="cta-big">CLAIM<br>YOUR NODE<span class="cursor"></span></p>
@@ -359,7 +388,8 @@
         <a href="https://bitcointalk.org/index.php?topic=5569237.0" target="_blank">BitcoinTalk</a> &nbsp;·&nbsp;
         <a href="https://njump.me/npub1ja465murtsks05k20828puvs6pqc0eld2xs95vfqmnz8wgseu3cqjdn27e" target="_blank">Nostr</a>
     </p>
-    <p style="margin-top:12px">SOVEREIGNTY IS NOT REQUESTED. IT IS EXERCISED.</p>
+    <p style="margin-top:8px">Open source · Copyleft · Fork it for your country</p>
+    <p style="margin-top:4px">SOVEREIGNTY IS NOT REQUESTED. IT IS EXERCISED.</p>
 </footer>
 
 <script>
