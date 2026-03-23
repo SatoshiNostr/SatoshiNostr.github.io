@@ -147,6 +147,25 @@
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
         .cursor::after { content: '_'; animation: blink 1s step-end infinite; color: var(--gold); }
 
+        /* LEGAL SECTION */
+        .legal-section { background: #07070d; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 64px 24px; }
+        .legal-inner { max-width: 860px; margin: 0 auto; }
+        .legal-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #c0392b; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .legal-eyebrow::before { content: ''; width: 20px; height: 1px; background: #c0392b; display: inline-block; }
+        .legal-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 5.5vw, 60px); color: #fff; line-height: 0.95; margin-bottom: 32px; }
+        .legal-title span { color: #c0392b; }
+        .legal-charges { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-bottom: 32px; }
+        .charge { background: #0a0a0a; padding: 24px; opacity: 0; transform: translateY(20px); }
+        .charge.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .charge-num { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #c0392b; letter-spacing: 0.3em; margin-bottom: 8px; }
+        .charge-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+        .charge-text { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); line-height: 1.7; }
+        .legal-quote { border-left: 3px solid #c0392b; padding: 20px 28px; background: #0d0d0d; margin-bottom: 28px; }
+        .legal-quote p { font-family: 'Space Mono', monospace; font-size: 12px; color: #e0e0e0; line-height: 1.8; font-style: italic; }
+        .legal-quote cite { display: block; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; margin-top: 12px; font-style: normal; }
+        .btn-legal { display: inline-block; border: 1px solid #c0392b; color: #c0392b; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; transition: all 0.2s; }
+        .btn-legal:hover { background: #c0392b; color: #fff; }
+
         @media (max-width: 600px) {
             .tiers { grid-template-columns: 1fr; }
             .stat { padding: 16px 20px; }
@@ -178,6 +197,51 @@
         <a href="#founder" class="btn-ghost">Why Founder Nodes are different ↓</a>
     </div>
 </section>
+
+<!-- LEGAL SECTION — CAPA 1 -->
+<div class="legal-section">
+    <div class="legal-inner">
+        <p class="legal-eyebrow">Análisis Doctrinal · NakamotoBook · MCI v2.26</p>
+        <h2 class="legal-title">Lo que el Derecho<br>se niega a ver.<br><span>La deuda pública es un fraude jurídico intergeneracional.</span></h2>
+        <div class="legal-charges">
+            <div class="charge">
+                <p class="charge-num">CARGO 01 DE 06</p>
+                <p class="charge-title">El Déficit Democrático de Fondo</p>
+                <p class="charge-text">No existe control intergeneracional sobre cuánto se puede cargar a quienes aún no votan.</p>
+            </div>
+            <div class="charge">
+                <p class="charge-num">CARGO 02 DE 06</p>
+                <p class="charge-title">El Canal Oculto hacia las Rentas Financieras</p>
+                <p class="charge-text">Cada euro en intereses de deuda es un euro que no va a sanidad, educación ni reducción de impuestos.</p>
+            </div>
+            <div class="charge">
+                <p class="charge-num">CARGO 03 DE 06</p>
+                <p class="charge-title">La Inflación como Impuesto Sin Nombre</p>
+                <p class="charge-text">Tributación sin debate, sin tipificación, sin control democrático. El Efecto Cantillon en acción.</p>
+            </div>
+            <div class="charge">
+                <p class="charge-num">CARGO 04 DE 06</p>
+                <p class="charge-title">La Ficción Técnica de la Estabilidad Macro</p>
+                <p class="charge-text">El lenguaje técnico desactiva el control democrático. La tecnocracia decide sin rendir cuentas.</p>
+            </div>
+            <div class="charge">
+                <p class="charge-num">CARGO 05 DE 06</p>
+                <p class="charge-title">El Contribuyente Futuro sin Derechos</p>
+                <p class="charge-text">Los ciudadanos futuros no son sujetos de derecho constitucional. Son, jurídicamente, nada. Y sin embargo, son ellos quienes van a pagar.</p>
+            </div>
+            <div class="charge">
+                <p class="charge-num">CARGO 06 DE 06</p>
+                <p class="charge-title">El Encaje Jurídico del Expolio</p>
+                <p class="charge-text">En Derecho privado se llamaría fraude por representación sin mandato. En Derecho público se llama política fiscal responsable.</p>
+            </div>
+        </div>
+        <div class="legal-quote">
+            <p>"El sistema no está roto. Está funcionando exactamente como fue diseñado. Y ese es el problema.<br><br>Nombrar esto con precisión es el primer acto de resistencia. El segundo es construir alternativas que no dependan de la buena voluntad de quienes se benefician del sistema."</p>
+            <cite>— Kiko Tsuki · Editor & DIRCOM · NakamotoBook · Análisis Doctrinal MCI v2.26</cite>
+        </div>
+        <a href="/deuda" class="btn-legal">Leer el análisis jurídico completo →</a>
+    </div>
+</div>
 
 <div class="stats">
     <div class="stat"><span class="stat-val">500</span><span class="stat-lbl">Founder Nodes</span></div>
@@ -410,7 +474,7 @@
     const io = new IntersectionObserver(entries => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
-    document.querySelectorAll('.card, .tier, .step, .priv').forEach(el => io.observe(el));
+    document.querySelectorAll('.card, .tier, .step, .priv, .charge').forEach(el => io.observe(el));
 </script>
 </body>
 </html>
