@@ -143,6 +143,24 @@
 
         hr { border: none; border-top: 1px solid #111; }
 
+
+        /* CAPA 2 — FUENTES */
+        .sources-section { background: #060608; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 56px 24px; }
+        .sources-inner { max-width: 860px; margin: 0 auto; }
+        .sources-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .sources-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
+        .sources-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 4.5vw, 52px); color: #fff; line-height: 0.95; margin-bottom: 12px; }
+        .sources-sub { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); line-height: 1.8; margin-bottom: 36px; max-width: 620px; }
+        .sources-sub strong { color: var(--gold); }
+        .sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-bottom: 28px; }
+        .source-item { background: #0a0a0a; padding: 28px 20px; text-align: center; text-decoration: none; transition: background 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .source-item:hover { background: #0f0f0f; }
+        .source-icon { font-size: 28px; line-height: 1; }
+        .source-name { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; }
+        .source-desc { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); line-height: 1.6; }
+        .source-tag { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: #2a2a2a; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid #1a1a1a; padding: 2px 8px; }
+        .sources-note { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #2a2a2a; text-align: center; letter-spacing: 0.1em; line-height: 1.9; border-top: 1px solid #111; padding-top: 20px; }
+        .sources-note strong { color: #444; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
         .cursor::after { content: '_'; animation: blink 1s step-end infinite; color: var(--gold); }
@@ -240,6 +258,62 @@
             <cite>— Kiko Tsuki · Editor & DIRCOM · NakamotoBook · Análisis Doctrinal MCI v2.26</cite>
         </div>
         <a href="/deuda" class="btn-legal">Leer el análisis jurídico completo →</a>
+    </div>
+</div>
+
+
+<!-- CAPA 2 — FUENTES INSTITUCIONALES -->
+<div class="sources-section">
+    <div class="sources-inner">
+        <p class="sources-eyebrow">Capa 2 · Fuentes Institucionales</p>
+        <h2 class="sources-title">ESTOS DATOS<br>NO SON NUESTROS.<br>SON DEL ESTADO.</h2>
+        <p class="sources-sub">
+            El dato de <strong>€35.597 de deuda por ciudadano</strong> no lo calculamos nosotros.<br>
+            Lo publican las instituciones oficiales que el propio Estado ha creado para rendir cuentas.<br>
+            Consulta las fuentes tú mismo.
+        </p>
+        <div class="sources-grid">
+            <a href="https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU" target="_blank" class="source-item">
+                <div class="source-icon">🏛️</div>
+                <p class="source-name">Banco de España</p>
+                <p class="source-desc">BIEST API — Deuda pública en % del PIB. Fuente primaria en tiempo real.</p>
+                <span class="source-tag">API en vivo</span>
+            </a>
+            <a href="https://www.tesoro.pub.es/tesoro/en/public-debt/public-debt-statistics/" target="_blank" class="source-item">
+                <div class="source-icon">📊</div>
+                <p class="source-name">Tesoro Público</p>
+                <p class="source-desc">Estadísticas oficiales de deuda pública española. Ministerio de Hacienda.</p>
+                <span class="source-tag">Oficial</span>
+            </a>
+            <a href="https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1/default/table" target="_blank" class="source-item">
+                <div class="source-icon">🇪🇺</div>
+                <p class="source-name">Eurostat</p>
+                <p class="source-desc">Base de datos de deuda pública de la UE. Metodología armonizada ESA 2010.</p>
+                <span class="source-tag">UE</span>
+            </a>
+            <a href="https://www.funcas.es/articulos/deuda-publica-y-sostenibilidad-fiscal/" target="_blank" class="source-item">
+                <div class="source-icon">📑</div>
+                <p class="source-name">Funcas</p>
+                <p class="source-desc">Fundación de las Cajas de Ahorros. Análisis de sostenibilidad fiscal española.</p>
+                <span class="source-tag">Académico</span>
+            </a>
+            <a href="https://www.tandfonline.com/journals/refc20" target="_blank" class="source-item">
+                <div class="source-icon">🎓</div>
+                <p class="source-name">Rev. Esp. Financiación</p>
+                <p class="source-desc">Revista Española de Financiación y Contabilidad. Taylor & Francis. Peer-reviewed.</p>
+                <span class="source-tag">Peer-reviewed</span>
+            </a>
+            <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736177049&menu=resultados" target="_blank" class="source-item">
+                <div class="source-icon">📈</div>
+                <p class="source-name">INE</p>
+                <p class="source-desc">Instituto Nacional de Estadística. Contabilidad nacional y cuentas públicas.</p>
+                <span class="source-tag">Nacional</span>
+            </a>
+        </div>
+        <p class="sources-note">
+            La app consulta el <strong>Banco de España BIEST API</strong> en tiempo real al cargar.<br>
+            Cascada de respaldo: Eurostat → INE → valor fijo 34.990 EUR si todas las APIs fallan.
+        </p>
     </div>
 </div>
 
