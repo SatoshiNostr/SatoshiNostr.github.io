@@ -179,7 +179,7 @@
 <body>
 
 <section class="hero">
-    <p class="ticker">[ SOVEREIGN PROTOCOL V1.0 — FOUNDER PHASE — 499 / 500 NODES AVAILABLE ]</p>
+    <p class="ticker">[ SOVEREIGN PROTOCOL V1.0 — FOUNDER PHASE — <span id="ticker-available">499</span> / 500 NODES AVAILABLE ]</p>
     <p class="eyebrow">Nostr × Bitcoin × Lightning</p>
     <h1 class="hero-title">SATOSHI<br>NOSTR</h1>
     <p class="hero-sub">Sovereign Debt Protocol</p>
@@ -245,7 +245,7 @@
 
 <div class="stats">
     <div class="stat"><span class="stat-val">500</span><span class="stat-lbl">Founder Nodes</span></div>
-    <div class="stat"><span class="stat-val">499</span><span class="stat-lbl">Still Available</span></div>
+    <div class="stat"><span class="stat-val" id="stat-available">---</span><span class="stat-lbl">Still Available</span></div>
     <div class="stat"><span class="stat-val">~99</span><span class="stat-lbl">Nodes Under 100 Sats</span></div>
     <div class="stat"><span class="stat-val" id="block-h">---</span><span class="stat-lbl">Bitcoin Block Height</span></div>
 </div>
@@ -436,7 +436,7 @@
 <hr>
 
 <div class="cta-bottom">
-    <p class="sec-label" style="justify-content:center">499 Founder Nodes remaining</p>
+    <p class="sec-label" style="justify-content:center"><span id="cta-remaining">---</span> Founder Nodes remaining</p>
     <p class="cta-big">CLAIM<br>YOUR NODE<span class="cursor"></span></p>
     <p>~99 nodes cost less than 100 sats.<br>
     Be a Founder before the protocol opens to every Spanish citizen.<br>
@@ -457,6 +457,7 @@
 </footer>
 
 <script>
+    // ─── DEUDA PER CAPITA ────────────────────────────────────────────────────
     fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU')
         .then(r => r.json())
         .then(data => {
@@ -466,15 +467,110 @@
         })
         .catch(() => { document.getElementById('debt-src').innerText = 'FALLBACK'; });
 
+    // ─── BLOCK HEIGHT ────────────────────────────────────────────────────────
     fetch('https://mempool.space/api/blocks/tip/height')
         .then(r => r.text())
         .then(h => { document.getElementById('block-h').innerText = parseInt(h).toLocaleString(); })
         .catch(() => {});
 
+    // ─── INTERSECTION OBSERVER ───────────────────────────────────────────────
     const io = new IntersectionObserver(entries => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.card, .tier, .step, .priv, .charge').forEach(el => io.observe(el));
+
+    // ─── INVENTARIO DINÁMICO DESDE NOSTR ─────────────────────────────────────
+    // Misma lógica que la app: todos los relays en paralelo.
+    // Lee Kind 30068 del oracle pubkey y actualiza el inventario en tiempo real.
+    const ORACLE_PUBKEY = "976baa6f835c2d07d2ca79d470f190d04187e7ed51a05a3120dcc4772219e470";
+    const NOSTR_RELAYS = [
+        "wss://relay.damus.io",
+        "wss://nos.lol",
+        "wss://relay.nostr.band",
+        "wss://nostr.wine",
+        "wss://relay.primal.net",
+        "wss://nostr-pub.wellorder.net",
+        "wss://relay.snort.social"
+    ];
+    const claimedNodes = new Set();
+    let eoseReceived = false;
+
+    function updateInventory() {
+        const available = 500 - claimedNodes.size;
+        // Ticker hero
+        const tickerEl = document.getElementById('ticker-available');
+        if (tickerEl) tickerEl.innerText = available;
+        // Stat bar
+        const statEl = document.getElementById('stat-available');
+        if (statEl) statEl.innerText = available;
+        // CTA bottom
+        const ctaEl = document.getElementById('cta-remaining');
+        if (ctaEl) ctaEl.innerText = available;
+    }
+
+    // Fallback global: si tras 12s ningún relay respondió, mostrar 497
+    // (valor conocido: #1 génesis + #444 + #494)
+    const globalTimeout = setTimeout(() => {
+        if (!eoseReceived) {
+            claimedNodes.add(1); claimedNodes.add(444); claimedNodes.add(494);
+            updateInventory();
+        }
+    }, 12000);
+
+    NOSTR_RELAYS.forEach(relayUrl => {
+        let ws;
+        try { ws = new WebSocket(relayUrl); } catch(e) { return; }
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify([
+                "REQ", "inventory-sub",
+                { kinds: [30068], authors: [ORACLE_PUBKEY] }
+            ]));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg[0] === "EVENT") {
+                    const numeroTag = msg[2].tags.find(t => t[0] === "numero");
+                    if (numeroTag) {
+                        const n = parseInt(numeroTag[1]);
+                        if (!isNaN(n) && n >= 1 && n <= 500) {
+                            const isNew = !claimedNodes.has(n);
+                            claimedNodes.add(n);
+                            if (isNew) updateInventory();
+                        }
+                    }
+                }
+                if (msg[0] === "EOSE" && !eoseReceived) {
+                    eoseReceived = true;
+                    clearTimeout(globalTimeout);
+                    updateInventory();
+                }
+            } catch(e) {}
+        };
+
+        ws.onerror = () => {};
+        ws.onclose = () => {
+            if (eoseReceived) {
+                setTimeout(() => {
+                    try {
+                        const r = new WebSocket(relayUrl);
+                        r.onopen = () => r.send(JSON.stringify(["REQ","inventory-sub",{kinds:[30068],authors:[ORACLE_PUBKEY]}]));
+                        r.onmessage = (ev) => {
+                            try {
+                                const m = JSON.parse(ev.data);
+                                if (m[0]==="EVENT") {
+                                    const t = m[2].tags.find(t=>t[0]==="numero");
+                                    if (t) { const n=parseInt(t[1]); if(!isNaN(n)&&n>=1&&n<=500&&!claimedNodes.has(n)){claimedNodes.add(n);updateInventory();} }
+                                }
+                            } catch(e) {}
+                        };
+                    } catch(e) {}
+                }, 15000);
+            }
+        };
+    });
 </script>
 </body>
 </html>
