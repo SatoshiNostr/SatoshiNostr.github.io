@@ -1,651 +1,518 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SatoshiNostr — Sovereign Debt Protocol</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --gold: #d4af37;
-            --gold-dim: #a8872a;
-            --gold-glow: rgba(212,175,55,0.08);
-            --black: #050505;
-            --dark: #0a0a0a;
-            --darker: #080808;
-            --text: #c8c8c8;
-            --text-dim: #555;
-            --red: #cc2200;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { background: var(--black); color: var(--text); font-family: 'Space Mono', monospace; overflow-x: hidden; }
-        body::before {
-            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
-            pointer-events: none; z-index: 1000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SatoshiNostr — Protocolo Soberano</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --oro:#c9a84c;
+  --oro-claro:#e8c96a;
+  --negro:#080808;
+  --gris-oscuro:#111;
+  --gris-medio:#1a1a1a;
+  --gris-borde:#2a2a2a;
+  --texto:#d4cfc5;
+  --texto-muted:#6b6560;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--negro);
+  color:var(--texto);
+  font-family:'EB Garamond',Georgia,serif;
+  font-size:18px;
+  line-height:1.7;
+  overflow-x:hidden;
+}
+.mono{font-family:'Space Mono',monospace;font-size:0.75em}
 
-        .hero {
-            min-height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; padding: 60px 20px; position: relative;
-            border-bottom: 1px solid #151515;
-        }
-        .hero::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(ellipse at 50% 35%, rgba(212,175,55,0.07) 0%, transparent 65%);
-            pointer-events: none;
-        }
-        .ticker { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #333; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 48px; opacity: 0; animation: fadeUp 0.6s ease 0.1s forwards; }
-        .eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.6s ease 0.3s forwards; }
-        .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(80px, 16vw, 180px); line-height: 0.88; color: var(--gold); text-shadow: 0 0 60px rgba(212,175,55,0.25), 0 0 120px rgba(212,175,55,0.08); opacity: 0; animation: fadeUp 0.8s ease 0.5s forwards; margin-bottom: 12px; }
-        .hero-sub { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px, 3.5vw, 40px); color: #333; letter-spacing: 0.2em; opacity: 0; animation: fadeUp 0.6s ease 0.7s forwards; margin-bottom: 40px; }
-        .hero-tagline { font-family: 'Share Tech Mono', monospace; font-size: clamp(11px, 1.8vw, 14px); color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 48px; line-height: 1.7; max-width: 560px; opacity: 0; animation: fadeUp 0.6s ease 0.85s forwards; }
-        .hero-tagline strong { color: var(--gold); }
-        .debt-display { margin-bottom: 12px; opacity: 0; animation: fadeUp 0.6s ease 0.9s forwards; }
-        .debt-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 6px; }
-        .debt-number { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 7vw, 72px); color: var(--red); line-height: 1; text-shadow: 0 0 40px rgba(204,34,0,0.3); }
-        .debt-source { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #2a2a2a; letter-spacing: 0.2em; margin-bottom: 56px; opacity: 0; animation: fadeUp 0.6s ease 1s forwards; }
-        .cta-wrap { opacity: 0; animation: fadeUp 0.6s ease 1.1s forwards; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .btn-primary { display: inline-block; background: var(--gold); color: var(--black); font-family: 'Share Tech Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; text-decoration: none; padding: 18px 52px; transition: all 0.2s ease; }
-        .btn-primary:hover { background: #e8c43d; transform: translateY(-2px); box-shadow: 0 8px 40px rgba(212,175,55,0.35); }
-        .btn-ghost { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.2em; border-bottom: 1px solid #222; padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
-        .btn-ghost:hover { color: var(--gold); border-color: var(--gold); }
+/* ── HERO ────────────────────────────────────────── */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:4rem 2rem;
+  position:relative;
+  border-bottom:1px solid var(--gris-borde);
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 30%, rgba(201,168,76,0.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.protocolo-tag{
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.25em;
+  color:var(--oro);
+  text-transform:uppercase;
+  margin-bottom:2rem;
+  opacity:0.7;
+}
+.hero-titulo{
+  font-size:clamp(2.2rem,5vw,4rem);
+  font-weight:700;
+  line-height:1.15;
+  color:#fff;
+  max-width:780px;
+  margin-bottom:1.5rem;
+}
+.hero-titulo em{
+  font-style:italic;
+  color:var(--oro-claro);
+}
+.hero-deuda{
+  font-family:'Space Mono',monospace;
+  font-size:clamp(2rem,6vw,3.5rem);
+  color:var(--oro);
+  font-weight:700;
+  letter-spacing:-0.02em;
+  margin:1.5rem 0 0.5rem;
+  line-height:1;
+}
+.hero-deuda-label{
+  font-size:0.75rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--texto-muted);
+  margin-bottom:2.5rem;
+  font-family:'Space Mono',monospace;
+}
+.hero-cta{
+  display:inline-block;
+  background:var(--oro);
+  color:var(--negro);
+  font-family:'Space Mono',monospace;
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  padding:1rem 2.5rem;
+  text-decoration:none;
+  transition:background 0.2s,transform 0.1s;
+  cursor:pointer;
+  border:none;
+}
+.hero-cta:hover{background:var(--oro-claro);transform:translateY(-1px)}
+.hero-sub{
+  margin-top:1.5rem;
+  font-size:0.85rem;
+  color:var(--texto-muted);
+  font-family:'Space Mono',monospace;
+}
+.scroll-hint{
+  position:absolute;
+  bottom:2rem;
+  left:50%;
+  transform:translateX(-50%);
+  font-family:'Space Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  color:var(--texto-muted);
+  text-transform:uppercase;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
 
-        .stats { display: flex; flex-wrap: wrap; justify-content: center; background: var(--darker); border-bottom: 1px solid #151515; }
-        .stat { text-align: center; padding: 20px 40px; border-right: 1px solid #151515; }
-        .stat:last-child { border-right: none; }
-        .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold); display: block; line-height: 1; }
-        .stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; display: block; }
+/* ── SECCIÓN GENÉRICA ────────────────────────────── */
+section{
+  max-width:860px;
+  margin:0 auto;
+  padding:5rem 2rem;
+  border-bottom:1px solid var(--gris-borde);
+}
+.seccion-tag{
+  font-family:'Space Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--oro);
+  opacity:0.6;
+  margin-bottom:0.75rem;
+}
+.seccion-titulo{
+  font-size:clamp(1.6rem,3.5vw,2.4rem);
+  font-weight:700;
+  color:#fff;
+  line-height:1.2;
+  margin-bottom:2rem;
+}
+p{margin-bottom:1.2rem;color:var(--texto)}
 
-        .section { max-width: 960px; margin: 0 auto; padding: 80px 24px; }
-        .sec-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-        .sec-label::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
-        .sec-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 72px); color: #fff; line-height: 0.95; margin-bottom: 40px; }
+/* ── 3 BLOQUES ───────────────────────────────────── */
+.bloques{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1.5rem;
+  margin-top:3rem;
+}
+.bloque{
+  border:1px solid var(--gris-borde);
+  padding:1.75rem 1.5rem;
+  background:var(--gris-oscuro);
+  transition:border-color 0.2s;
+}
+.bloque:hover{border-color:var(--oro)}
+.bloque-num{
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  color:var(--oro);
+  letter-spacing:0.2em;
+  margin-bottom:0.75rem;
+  opacity:0.7;
+}
+.bloque-titulo{
+  font-size:1.15rem;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:0.75rem;
+}
+.bloque p{font-size:0.9rem;color:var(--texto-muted);margin:0}
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; }
-        .card { background: var(--dark); padding: 32px; position: relative; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
-        .card.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
-        .card:hover { background: #0d0d0d; }
-        .card-num { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: #151515; position: absolute; top: 12px; right: 20px; line-height: 1; }
-        .card-title { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
-        .card-text { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+/* ── CITA ────────────────────────────────────────── */
+.cita{
+  border-left:3px solid var(--oro);
+  padding-left:2rem;
+  margin:3rem 0;
+  font-size:1.25rem;
+  font-style:italic;
+  color:var(--texto);
+  line-height:1.6;
+}
 
-        .v2-banner { background: #0d0d0d; border: 1px solid #1a1a1a; border-left: 3px solid var(--gold); padding: 32px 40px; margin-top: 48px; }
-        .v2-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 0.35em; text-transform: uppercase; margin-bottom: 12px; }
-        .v2-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 52px); color: #fff; line-height: 1; margin-bottom: 16px; }
-        .v2-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.9; max-width: 640px; }
-        .v2-text strong { color: var(--gold); }
+/* ── STATS ───────────────────────────────────────── */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:1px;
+  background:var(--gris-borde);
+  border:1px solid var(--gris-borde);
+  margin:3rem 0;
+}
+.stat{
+  background:var(--gris-oscuro);
+  padding:1.5rem;
+  text-align:center;
+}
+.stat-num{
+  font-family:'Space Mono',monospace;
+  font-size:1.6rem;
+  color:var(--oro);
+  font-weight:700;
+  display:block;
+  line-height:1;
+  margin-bottom:0.4rem;
+}
+.stat-label{
+  font-family:'Space Mono',monospace;
+  font-size:0.55rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--texto-muted);
+}
 
-        .privileges { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-top: 32px; }
-        .priv { background: var(--dark); padding: 28px; opacity: 0; transform: translateY(20px); }
-        .priv.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
-        .priv-icon { font-size: 20px; margin-bottom: 12px; }
-        .priv-title { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-        .priv-text { font-size: 11px; color: var(--text-dim); line-height: 1.8; }
+/* ── POST-PAGO ───────────────────────────────────── */
+.pasos{display:flex;flex-direction:column;gap:0}
+.paso{
+  display:grid;
+  grid-template-columns:3rem 1fr;
+  gap:1.5rem;
+  padding:1.5rem 0;
+  border-bottom:1px solid var(--gris-borde);
+  align-items:start;
+}
+.paso:last-child{border-bottom:none}
+.paso-num{
+  font-family:'Space Mono',monospace;
+  font-size:0.75rem;
+  color:var(--oro);
+  font-weight:700;
+  padding-top:0.15rem;
+}
+.paso-titulo{
+  font-weight:700;
+  color:#fff;
+  margin-bottom:0.25rem;
+  font-size:1rem;
+}
+.paso p{font-size:0.9rem;margin:0;color:var(--texto-muted)}
 
-        .pricing-box { border: 1px solid #151515; background: var(--dark); padding: 40px; }
-        .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #151515; margin-bottom: 32px; }
-        .tier { background: var(--dark); padding: 28px; position: relative; opacity: 0; transform: translateY(20px); }
-        .tier.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
-        .tier.hot { background: var(--gold-glow); border: 1px solid rgba(212,175,55,0.3); }
-        .tier-badge { position: absolute; top: -10px; left: 16px; background: var(--gold); color: var(--black); font-family: 'Share Tech Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 10px; }
-        .tier-n { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--gold); line-height: 1; margin-bottom: 4px; }
-        .tier-range { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 16px; }
-        .tier-desc { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); line-height: 1.7; }
-        .tier-desc strong { color: var(--gold); }
-        .formula-note { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center; border-top: 1px solid #151515; padding-top: 24px; line-height: 1.9; }
-        .formula-note strong { color: var(--gold); }
+/* ── CAPA TÉCNICA ────────────────────────────────── */
+.tecnico-toggle{
+  background:none;
+  border:1px solid var(--gris-borde);
+  color:var(--texto-muted);
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  padding:0.75rem 1.5rem;
+  cursor:pointer;
+  transition:border-color 0.2s,color 0.2s;
+  width:100%;
+  text-align:left;
+  margin-top:2rem;
+}
+.tecnico-toggle:hover{border-color:var(--oro);color:var(--oro)}
+.tecnico-panel{
+  display:none;
+  margin-top:1px;
+  border:1px solid var(--gris-borde);
+  border-top:none;
+  padding:1.5rem;
+  background:var(--gris-medio);
+}
+.tecnico-panel.open{display:block}
+.json-preview{
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  color:var(--oro);
+  background:var(--negro);
+  border:1px solid var(--gris-borde);
+  padding:1rem;
+  white-space:pre-wrap;
+  word-break:break-all;
+  line-height:1.6;
+  overflow-x:auto;
+}
 
-        .steps { display: flex; flex-direction: column; gap: 1px; background: #151515; border: 1px solid #151515; }
-        .step { background: var(--dark); padding: 28px 32px; display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: start; transition: background 0.2s; opacity: 0; transform: translateY(20px); }
-        .step.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s; }
-        .step:hover { background: #0d0d0d; }
-        .step-n { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: #1a1a1a; line-height: 1; }
-        .step h3 { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
-        .step p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+/* ── CTA FINAL ───────────────────────────────────── */
+.cta-final{
+  text-align:center;
+  padding:6rem 2rem;
+  max-width:700px;
+  margin:0 auto;
+}
+.cta-final .seccion-titulo{margin-bottom:1rem}
+.cta-final p{max-width:520px;margin:0 auto 2.5rem;font-size:1rem}
+.nodos-disponibles{
+  font-family:'Space Mono',monospace;
+  font-size:0.7rem;
+  letter-spacing:0.15em;
+  color:var(--texto-muted);
+  margin-top:1rem;
+}
 
-        .verify-box { background: var(--darker); border: 1px solid #151515; padding: 40px; text-align: center; margin-top: 48px; }
-        .verify-lbl { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 16px; }
-        .verify-id { font-family: 'Share Tech Mono', monospace; font-size: clamp(7px, 1.1vw, 10px); color: #444; word-break: break-all; padding: 16px; background: var(--black); border: 1px solid #151515; margin-bottom: 20px; line-height: 1.8; }
-        .verify-link { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 2px; transition: all 0.2s; letter-spacing: 0.1em; }
-        .verify-link:hover { color: #fff; border-color: #fff; }
-
-        /* FORK SECTION */
-        .fork-section { background: #08080f; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 60px 24px; text-align: center; }
-        .fork-inner { max-width: 720px; margin: 0 auto; }
-        .fork-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .fork-label::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
-        .fork-label::after { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
-        .fork-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 64px); color: #fff; line-height: 0.95; margin-bottom: 24px; }
-        .fork-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.9; margin-bottom: 32px; }
-        .fork-text strong { color: var(--gold); }
-        .debt-countries { display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; background: #151515; border: 1px solid #151515; margin: 32px 0; }
-        .country { background: var(--dark); padding: 16px 24px; text-align: center; }
-        .country-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); display: block; }
-        .country-debt { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); display: block; margin-top: 2px; }
-        .fork-cta { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-bottom: 20px; }
-        .fork-cta strong { color: var(--gold); }
-        .btn-fork { display: inline-block; border: 1px solid var(--gold); color: var(--gold); font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; padding: 14px 36px; transition: all 0.2s; }
-        .btn-fork:hover { background: var(--gold); color: var(--black); }
-
-        .cta-bottom { background: var(--darker); border-top: 1px solid #151515; text-align: center; padding: 80px 24px; }
-        .cta-bottom .sec-label { justify-content: center; }
-        .cta-big { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 10vw, 112px); color: var(--gold); line-height: 0.9; margin: 24px 0; text-shadow: 0 0 60px rgba(212,175,55,0.2); }
-        .cta-bottom p { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); max-width: 480px; margin: 0 auto 40px; line-height: 1.9; }
-
-        footer { border-top: 1px solid #111; padding: 28px 24px; text-align: center; }
-        footer p { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #282828; letter-spacing: 0.15em; line-height: 2; }
-        footer a { color: #333; text-decoration: none; transition: color 0.2s; }
-        footer a:hover { color: var(--gold); }
-
-        hr { border: none; border-top: 1px solid #111; }
-
-
-        /* CAPA 2 — FUENTES */
-        .sources-section { background: #060608; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 56px 24px; }
-        .sources-inner { max-width: 860px; margin: 0 auto; }
-        .sources-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-        .sources-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold); display: inline-block; }
-        .sources-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 4.5vw, 52px); color: #fff; line-height: 0.95; margin-bottom: 12px; }
-        .sources-sub { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); line-height: 1.8; margin-bottom: 36px; max-width: 620px; }
-        .sources-sub strong { color: var(--gold); }
-        .sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-bottom: 28px; }
-        .source-item { background: #0a0a0a; padding: 28px 20px; text-align: center; text-decoration: none; transition: background 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .source-item:hover { background: #0f0f0f; }
-        .source-icon { font-size: 28px; line-height: 1; }
-        .source-name { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; }
-        .source-desc { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); line-height: 1.6; }
-        .source-tag { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: #2a2a2a; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid #1a1a1a; padding: 2px 8px; }
-        .sources-note { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #2a2a2a; text-align: center; letter-spacing: 0.1em; line-height: 1.9; border-top: 1px solid #111; padding-top: 20px; }
-        .sources-note strong { color: #444; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
-        .cursor::after { content: '_'; animation: blink 1s step-end infinite; color: var(--gold); }
-
-        /* LEGAL SECTION */
-        .legal-section { background: #07070d; border-top: 1px solid #151515; border-bottom: 1px solid #151515; padding: 64px 24px; }
-        .legal-inner { max-width: 860px; margin: 0 auto; }
-        .legal-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #c0392b; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .legal-eyebrow::before { content: ''; width: 20px; height: 1px; background: #c0392b; display: inline-block; }
-        .legal-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 5.5vw, 60px); color: #fff; line-height: 0.95; margin-bottom: 32px; }
-        .legal-title span { color: #c0392b; }
-        .legal-charges { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #151515; border: 1px solid #151515; margin-bottom: 32px; }
-        .charge { background: #0a0a0a; padding: 24px; opacity: 0; transform: translateY(20px); }
-        .charge.visible { opacity: 1; transform: translateY(0); transition: opacity 0.5s ease, transform 0.5s ease; }
-        .charge-num { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #c0392b; letter-spacing: 0.3em; margin-bottom: 8px; }
-        .charge-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
-        .charge-text { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); line-height: 1.7; }
-        .legal-quote { border-left: 3px solid #c0392b; padding: 20px 28px; background: #0d0d0d; margin-bottom: 28px; }
-        .legal-quote p { font-family: 'Space Mono', monospace; font-size: 12px; color: #e0e0e0; line-height: 1.8; font-style: italic; }
-        .legal-quote cite { display: block; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; margin-top: 12px; font-style: normal; }
-        .btn-legal { display: inline-block; border: 1px solid #c0392b; color: #c0392b; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; padding: 14px 32px; transition: all 0.2s; }
-        .btn-legal:hover { background: #c0392b; color: #fff; }
-
-        @media (max-width: 600px) {
-            .tiers { grid-template-columns: 1fr; }
-            .stat { padding: 16px 20px; }
-            .step { grid-template-columns: 1fr; gap: 6px; }
-            .step-n { font-size: 28px; }
-            .v2-banner { padding: 24px; }
-            .debt-countries { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
+/* ── FOOTER ──────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--gris-borde);
+  padding:2rem;
+  text-align:center;
+  font-family:'Space Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.15em;
+  color:var(--texto-muted);
+  text-transform:uppercase;
+}
+footer a{color:var(--oro);text-decoration:none}
+</style>
 </head>
 <body>
 
-<section class="hero">
-    <p class="ticker">[ SOVEREIGN PROTOCOL V1.0 — FOUNDER PHASE — <span id="ticker-available">499</span> / 500 NODES AVAILABLE ]</p>
-    <p class="eyebrow">Nostr × Bitcoin × Lightning</p>
-    <h1 class="hero-title">SATOSHI<br>NOSTR</h1>
-    <p class="hero-sub">Sovereign Debt Protocol</p>
-    <p class="hero-tagline">
-        <strong>Bitcoin gave you sovereignty over your money.</strong><br>
-        SatoshiNostr gives you sovereignty over your debt.
-    </p>
-    <div class="debt-display">
-        <p class="debt-label">THE STATE ISSUED THIS MUCH DEBT IN YOUR NAME:</p>
-        <p class="debt-number" id="debt-val">€35,597</p>
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="protocolo-tag">Protocolo SatoshiNostr · V1.0 · España</div>
+
+  <h1 class="hero-titulo">
+    El Estado ha contraído<br>
+    <em id="deuda-display">35.597 €</em> de deuda<br>
+    en tu nombre.<br>
+    Sin pedirte permiso.
+  </h1>
+
+  <div class="hero-deuda" id="deuda-num">35.597 €</div>
+  <div class="hero-deuda-label mono">deuda pública per cápita · fuente: <span id="deuda-fuente">Banco de España</span></div>
+
+  <button class="hero-cta" onclick="document.getElementById('que-es').scrollIntoView({behavior:'smooth'})">
+    Registrar mi declaración soberana →
+  </button>
+  <p class="hero-sub" id="hero-sub-txt">496 / 500 nodos disponibles · desde 1 sat</p>
+
+  <div class="scroll-hint">↓ &nbsp; leer más</div>
+</div>
+
+<!-- ══ QUÉ ES / QUÉ HACE / QUÉ RECIBES ══════════════════════════ -->
+<section id="que-es">
+  <div class="seccion-tag">01 — Qué es</div>
+  <h2 class="seccion-titulo">Un contrato entre tú y la cadena de bloques de Bitcoin.</h2>
+
+  <p>SatoshiNostr es un protocolo que te permite registrar criptográficamente tu declaración de no-consentimiento con la deuda pública española. No en papel. No en un juzgado. En Bitcoin: permanente, verificable, irreversible.</p>
+
+  <p>Cada Nodo Fundador es un evento firmado con tu identidad digital y publicado en la red Nostr, anclado al tiempo real de la blockchain de Bitcoin. Nadie puede borrarlo. Ningún gobierno puede negarlo.</p>
+
+  <div class="cita">
+    "La soberanía no se solicita. Se ejerce."
+  </div>
+
+  <div class="bloques">
+    <div class="bloque">
+      <div class="bloque-num">01</div>
+      <div class="bloque-titulo">Qué es</div>
+      <p>Un registro criptográfico en Bitcoin de tu declaración de no-consentimiento con la deuda pública. Permanente e inmutable.</p>
     </div>
-    <p class="debt-source">SOURCE: BANCO DE ESPAÑA BIEST API — <span id="debt-src">LIVE</span></p>
-    <div class="cta-wrap">
-        <a href="https://nostrdebt.github.io/emisorcontratos/" class="btn-primary">Claim Your Founder Node →</a>
-        <a href="#founder" class="btn-ghost">Why Founder Nodes are different ↓</a>
+    <div class="bloque">
+      <div class="bloque-num">02</div>
+      <div class="bloque-titulo">Qué hace</div>
+      <p>Publica tu Nodo Fundador en Nostr con firma digital verificable. Cualquiera puede comprobar que existió, cuándo y quién lo firmó.</p>
     </div>
+    <div class="bloque">
+      <div class="bloque-num">03</div>
+      <div class="bloque-titulo">Qué recibes</div>
+      <p>Cada vez que entra un nuevo Fundador después de ti, recibes sats automáticamente vía Lightning. Sin intermediarios. Sin permiso.</p>
+    </div>
+  </div>
 </section>
 
-<!-- LEGAL SECTION — CAPA 1 -->
-<div class="legal-section">
-    <div class="legal-inner">
-        <p class="legal-eyebrow">Análisis Doctrinal · NakamotoBook · MCI v2.26</p>
-        <h2 class="legal-title">Lo que el Derecho<br>se niega a ver.<br><span>La deuda pública es un fraude jurídico intergeneracional.</span></h2>
-        <div class="legal-charges">
-            <div class="charge">
-                <p class="charge-num">CARGO 01 DE 06</p>
-                <p class="charge-title">El Déficit Democrático de Fondo</p>
-                <p class="charge-text">No existe control intergeneracional sobre cuánto se puede cargar a quienes aún no votan.</p>
-            </div>
-            <div class="charge">
-                <p class="charge-num">CARGO 02 DE 06</p>
-                <p class="charge-title">El Canal Oculto hacia las Rentas Financieras</p>
-                <p class="charge-text">Cada euro en intereses de deuda es un euro que no va a sanidad, educación ni reducción de impuestos.</p>
-            </div>
-            <div class="charge">
-                <p class="charge-num">CARGO 03 DE 06</p>
-                <p class="charge-title">La Inflación como Impuesto Sin Nombre</p>
-                <p class="charge-text">Tributación sin debate, sin tipificación, sin control democrático. El Efecto Cantillon en acción.</p>
-            </div>
-            <div class="charge">
-                <p class="charge-num">CARGO 04 DE 06</p>
-                <p class="charge-title">La Ficción Técnica de la Estabilidad Macro</p>
-                <p class="charge-text">El lenguaje técnico desactiva el control democrático. La tecnocracia decide sin rendir cuentas.</p>
-            </div>
-            <div class="charge">
-                <p class="charge-num">CARGO 05 DE 06</p>
-                <p class="charge-title">El Contribuyente Futuro sin Derechos</p>
-                <p class="charge-text">Los ciudadanos futuros no son sujetos de derecho constitucional. Son, jurídicamente, nada. Y sin embargo, son ellos quienes van a pagar.</p>
-            </div>
-            <div class="charge">
-                <p class="charge-num">CARGO 06 DE 06</p>
-                <p class="charge-title">El Encaje Jurídico del Expolio</p>
-                <p class="charge-text">En Derecho privado se llamaría fraude por representación sin mandato. En Derecho público se llama política fiscal responsable.</p>
-            </div>
-        </div>
-        <div class="legal-quote">
-            <p>"El sistema no está roto. Está funcionando exactamente como fue diseñado. Y ese es el problema.<br><br>Nombrar esto con precisión es el primer acto de resistencia. El segundo es construir alternativas que no dependan de la buena voluntad de quienes se benefician del sistema."</p>
-            <cite>— Kiko Tsuki · Editor & DIRCOM · NakamotoBook · Análisis Doctrinal MCI v2.26</cite>
-        </div>
-        <a href="/deuda" class="btn-legal">Leer el análisis jurídico completo →</a>
-        <a href="/guia_estrategica_sintropica.pdf" download class="btn-legal" style="margin-left:12px;border-color:#d4af37;color:#d4af37;">⬇ Descargar Guía Estratégica Sintrópica →</a>
+<!-- ══ MODELO ECONÓMICO ═══════════════════════════════════════════ -->
+<section>
+  <div class="seccion-tag">02 — Modelo económico</div>
+  <h2 class="seccion-titulo">No es un Ponzi. Es un protocolo con equity nativo en Bitcoin.</h2>
+
+  <p>El 50% del precio de cada Nodo nuevo se distribuye automáticamente entre todos los Fundadores anteriores, vía Lightning, en tiempo real. El otro 50% financia el protocolo — visible en balance público. Público. Verificable en Nostr. Finito: solo existen 500 Nodos Fundadores.</p>
+
+  <p>Cuanto antes entras, más recibes. El mecanismo está codificado en el protocolo — no depende de que nadie lo decida.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">500</span>
+      <span class="stat-label">Nodos totales · Fase Fundador</span>
     </div>
-</div>
-
-
-<!-- CAPA 2 — FUENTES INSTITUCIONALES -->
-<div class="sources-section">
-    <div class="sources-inner">
-        <p class="sources-eyebrow">Capa 2 · Fuentes Institucionales</p>
-        <h2 class="sources-title">ESTOS DATOS<br>NO SON NUESTROS.<br>SON DEL ESTADO.</h2>
-        <p class="sources-sub">
-            El dato de <strong>€35.597 de deuda por ciudadano</strong> no lo calculamos nosotros.<br>
-            Lo publican las instituciones oficiales que el propio Estado ha creado para rendir cuentas.<br>
-            Consulta las fuentes tú mismo.
-        </p>
-        <div class="sources-grid">
-            <a href="https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU" target="_blank" class="source-item">
-                <div class="source-icon">🏛️</div>
-                <p class="source-name">Banco de España</p>
-                <p class="source-desc">BIEST API — Deuda pública en % del PIB. Fuente primaria en tiempo real.</p>
-                <span class="source-tag">API en vivo</span>
-            </a>
-            <a href="https://www.tesoro.pub.es/tesoro/en/public-debt/public-debt-statistics/" target="_blank" class="source-item">
-                <div class="source-icon">📊</div>
-                <p class="source-name">Tesoro Público</p>
-                <p class="source-desc">Estadísticas oficiales de deuda pública española. Ministerio de Hacienda.</p>
-                <span class="source-tag">Oficial</span>
-            </a>
-            <a href="https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1/default/table" target="_blank" class="source-item">
-                <div class="source-icon">🇪🇺</div>
-                <p class="source-name">Eurostat</p>
-                <p class="source-desc">Base de datos de deuda pública de la UE. Metodología armonizada ESA 2010.</p>
-                <span class="source-tag">UE</span>
-            </a>
-            <a href="https://www.funcas.es/articulos/deuda-publica-y-sostenibilidad-fiscal/" target="_blank" class="source-item">
-                <div class="source-icon">📑</div>
-                <p class="source-name">Funcas</p>
-                <p class="source-desc">Fundación de las Cajas de Ahorros. Análisis de sostenibilidad fiscal española.</p>
-                <span class="source-tag">Académico</span>
-            </a>
-            <a href="https://www.tandfonline.com/journals/refc20" target="_blank" class="source-item">
-                <div class="source-icon">🎓</div>
-                <p class="source-name">Rev. Esp. Financiación</p>
-                <p class="source-desc">Revista Española de Financiación y Contabilidad. Taylor & Francis. Peer-reviewed.</p>
-                <span class="source-tag">Peer-reviewed</span>
-            </a>
-            <a href="https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736177049&menu=resultados" target="_blank" class="source-item">
-                <div class="source-icon">📈</div>
-                <p class="source-name">INE</p>
-                <p class="source-desc">Instituto Nacional de Estadística. Contabilidad nacional y cuentas públicas.</p>
-                <span class="source-tag">Nacional</span>
-            </a>
-        </div>
-        <p class="sources-note">
-            La app consulta el <strong>Banco de España BIEST API</strong> en tiempo real al cargar.<br>
-            Cascada de respaldo: Eurostat → INE → valor fijo 34.990 EUR si todas las APIs fallan.
-        </p>
+    <div class="stat">
+      <span class="stat-num">50%</span>
+      <span class="stat-label">De cada precio va a fundadores anteriores</span>
     </div>
-</div>
-
-<div class="stats">
-    <div class="stat"><span class="stat-val">500</span><span class="stat-lbl">Founder Nodes</span></div>
-    <div class="stat"><span class="stat-val" id="stat-available">---</span><span class="stat-lbl">Still Available</span></div>
-    <div class="stat"><span class="stat-val">~99</span><span class="stat-lbl">Nodes Under 100 Sats</span></div>
-    <div class="stat"><span class="stat-val" id="block-h">---</span><span class="stat-lbl">Bitcoin Block Height</span></div>
-</div>
-
-<hr>
-
-<div class="section">
-    <p class="sec-label">What you get today</p>
-    <h2 class="sec-title">TANGIBLE.<br>IMMEDIATE.<br>PERMANENT.</h2>
-    <div class="grid">
-        <div class="card">
-            <div class="card-num">01</div>
-            <p class="card-title">A Unique Number</p>
-            <p class="card-text">One of only 500 Founder Nodes. Cryptographically yours. Timestamped on Bitcoin. No authority can alter, duplicate, or revoke it.</p>
-        </div>
-        <div class="card">
-            <div class="card-num">02</div>
-            <p class="card-title">A Cypherpunk Certificate</p>
-            <p class="card-text">A PDF — dark background, gold text, monospaced font — with your node number, the sovereign debt figure, your Bitcoin block timestamp, and a Nostr event ID.</p>
-        </div>
-        <div class="card">
-            <div class="card-num">03</div>
-            <p class="card-title">Nostr Registration</p>
-            <p class="card-text">Your contract is published as a Kind 30068 event on Nostr. Signed by the Oracle's cryptographic key. Immutable. Verifiable by anyone, forever.</p>
-        </div>
-        <div class="card">
-            <div class="card-num">04</div>
-            <p class="card-title">Founder Privileges</p>
-            <p class="card-text">Founder Nodes carry rights that V2 nodes will not have. Revenue share. Protocol governance. The first 500 are not just early — they are structurally different.</p>
-        </div>
+    <div class="stat">
+      <span class="stat-num">232M</span>
+      <span class="stat-label">Sats máximos por nodo tardío</span>
     </div>
-</div>
-
-<hr>
-
-<div class="section" id="founder">
-    <p class="sec-label">Founder vs V2</p>
-    <h2 class="sec-title">THE FIRST 500.<br>BEFORE SPAIN<br>CLAIMS IT BACK.</h2>
-
-    <div class="v2-banner">
-        <p class="v2-label">Protocol V2 — Coming</p>
-        <p class="v2-title">Every Spanish citizen with a government-issued digital ID<br>will be able to claim their own sovereign node.</p>
-        <p class="v2-text">
-            In V2, any Spanish citizen can use their <strong>official digital certificate (DNI electrónico)</strong>
-            to register their personal sovereign debt claim directly in the protocol —
-            using the State's own cryptographic tools against the State's own debt.<br><br>
-            That opens the protocol to <strong>47 million potential nodes</strong>.<br><br>
-            The 500 Founder Nodes exist <strong>before all of that</strong>.
-            They are the genesis layer. And they carry rights that V2 nodes will not have.
-        </p>
+    <div class="stat">
+      <span class="stat-num">⚡</span>
+      <span class="stat-label">Pago automático · Lightning Network</span>
     </div>
+  </div>
 
-    <div class="privileges">
-        <div class="priv">
-            <div class="priv-icon">◈</div>
-            <p class="priv-title">Revenue Share</p>
-            <p class="priv-text">Founder Nodes participate in the revenue generated when the protocol opens to all Spanish citizens in V2. You are not just early — you hold a stake.</p>
-        </div>
-        <div class="priv">
-            <div class="priv-icon">⬡</div>
-            <p class="priv-title">Protocol Governance</p>
-            <p class="priv-text">Founder Nodes will have voting rights in protocol decisions. The governance model — including a potential DAO structure — is being designed. Founders vote first.</p>
-        </div>
-        <div class="priv">
-            <div class="priv-icon">◈</div>
-            <p class="priv-title">Genesis Status</p>
-            <p class="priv-text">There were 500 Founder Nodes before Spain knew about the protocol. That history is immutable. When V2 opens to millions, the first 500 will always have been first.</p>
-        </div>
+  <p style="font-size:0.85rem;color:var(--texto-muted);font-family:'Space Mono',monospace">Los nodos #401–500 cuestan entre 1 y 97 sats. Cuando se vendan los 500, cada uno habrá cobrado 232 millones de sats.</p>
+</section>
+
+<!-- ══ DESPUÉS DE PAGAR ═══════════════════════════════════════════ -->
+<section>
+  <div class="seccion-tag">03 — Qué pasa después</div>
+  <h2 class="seccion-titulo">Cuatro pasos. Ninguno depende de nuestra confianza.</h2>
+
+  <div class="pasos">
+    <div class="paso">
+      <div class="paso-num">01</div>
+      <div>
+        <div class="paso-titulo">Pagas en Lightning</div>
+        <p>Escaneas el QR con cualquier wallet Lightning. El importe está fijado por la fórmula del protocolo — no lo decide nadie.</p>
+      </div>
     </div>
-</div>
-
-<hr>
-
-<div class="section">
-    <p class="sec-label">Pricing</p>
-    <h2 class="sec-title">YOU CHOOSE<br>YOUR POSITION.</h2>
-    <div class="pricing-box">
-        <div class="tiers">
-            <div class="tier">
-                <div class="tier-n">100</div>
-                <div class="tier-range">NODES #1 — #100</div>
-                <div class="tier-desc">From <strong>1 BTC</strong> to <strong>100 BTC</strong><br>The genesis tier. The most scarce.<br>For those who understand first-mover value.</div>
-            </div>
-            <div class="tier">
-                <div class="tier-n">300</div>
-                <div class="tier-range">NODES #101 — #400</div>
-                <div class="tier-desc">From <strong>100 sats</strong> to <strong>~1 BTC</strong><br>The mid-tier. Accessible.<br>A meaningful position at a reasonable cost.</div>
-            </div>
-            <div class="tier hot">
-                <div class="tier-badge">⚡ From 1 sat</div>
-                <div class="tier-n">~99</div>
-                <div class="tier-range">NODES #401 — #499</div>
-                <div class="tier-desc">From <strong>1 sat</strong> to <strong>100 sats</strong><br>Your first Lightning transaction.<br>A Founder Node for the cost of almost nothing.</div>
-            </div>
-            <div class="tier">
-                <div class="tier-n">#1</div>
-                <div class="tier-range">THE GENESIS NODE</div>
-                <div class="tier-desc">Cost: <strong>100 BTC</strong><br>The rarest object in the protocol.<br>There is only one. There will only ever be one.</div>
-            </div>
-        </div>
-        <div class="formula-note">
-            The price is set by an <strong>exponential decay algorithm</strong> — not by the Oracle.<br>
-            The first 500 Founder Nodes are the only ones with these privileges.<br><br>
-            <strong>f(n) = 10¹⁰ × e^(−0.046144 × (n−1))</strong>
-        </div>
+    <div class="paso">
+      <div class="paso-num">02</div>
+      <div>
+        <div class="paso-titulo">Recibes un certificado en PDF</div>
+        <p>Con tu número de nodo, la fecha, el Event ID de Nostr y el hash del bloque de Bitcoin en ese momento. Es un documento de prueba — no tiene validez legal hoy, pero es verificable on-chain.</p>
+      </div>
     </div>
-</div>
-
-<hr>
-
-<div class="section" id="how">
-    <p class="sec-label">How it works</p>
-    <h2 class="sec-title">FOUR STEPS.<br>IMMUTABLE RESULT.</h2>
-    <div class="steps">
-        <div class="step">
-            <div class="step-n">01</div>
-            <div>
-                <h3>Choose your node</h3>
-                <p>Select any number between 1 and 500. The price is calculated instantly by the protocol's exponential decay formula. No negotiation. No intermediary.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-n">02</div>
-            <div>
-                <h3>Pay via Lightning</h3>
-                <p>Scan the QR with any Lightning wallet. No KYC. No account. No personal data. The payment confirms in seconds.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-n">03</div>
-            <div>
-                <h3>Receive your certificate</h3>
-                <p>The moment payment is confirmed, your cypherpunk PDF certificate downloads automatically. Dark background. Gold text. Your number. Your timestamp. Yours forever.</p>
-            </div>
-        </div>
-        <div class="step">
-            <div class="step-n">04</div>
-            <div>
-                <h3>Verify on Nostr forever</h3>
-                <p>Your contract is registered on Nostr as a Kind 30068 event — signed by the Oracle. Anyone can verify it. No one can delete it.</p>
-            </div>
-        </div>
+    <div class="paso">
+      <div class="paso-num">03</div>
+      <div>
+        <div class="paso-titulo">Tu nodo se publica en Nostr</div>
+        <p>El protocolo emite un evento Kind 30068 firmado por el oracle del protocolo. Verificable en <span class="mono" style="color:var(--oro)">njump.me</span> con tu Event ID. Permanente.</p>
+      </div>
     </div>
-</div>
-
-<hr>
-
-<div class="section">
-    <p class="sec-label">Proof of work</p>
-    <h2 class="sec-title">CONTRACT #1<br>ALREADY EXISTS.</h2>
-    <p style="font-size:12px;color:var(--text-dim);line-height:1.9;max-width:560px">
-        The Genesis Contract was registered on Nostr on March 18, 2026 at 16:56:07 GMT.<br>
-        It cannot be modified. It cannot be deleted. Verify it yourself, right now.
-    </p>
-    <div class="verify-box">
-        <p class="verify-lbl">Nostr Event ID — Kind 30068</p>
-        <div class="verify-id">970bb8ebf7c0365225246669bfcba41376389763d20158998acc4175bae865ad</div>
-        <a href="https://njump.me/970bb8ebf7c0365225246669bfcba41376389763d20158998acc4175bae865ad" target="_blank" class="verify-link">Verify on njump.me →</a>
+    <div class="paso">
+      <div class="paso-num">04</div>
+      <div>
+        <div class="paso-titulo">Empiezas a recibir sats</div>
+        <p>Si proporcionas tu Lightning address, recibirás automáticamente el 50% del precio de cada nuevo nodo que entre después de ti. Sin hacer nada más.</p>
+      </div>
     </div>
+  </div>
+
+  <button class="tecnico-toggle" onclick="toggleTecnico()">[ + Modo avanzado — detalles técnicos del protocolo ]</button>
+  <div id="tecnico-panel" class="tecnico-panel">
+    <p style="font-size:0.85rem;margin-bottom:1rem">Cada Nodo Fundador es un evento Nostr de Kind 30068 firmado con la clave privada del oracle del protocolo. El Event ID es único e irrepetible. Puedes verificarlo en cualquier relay Nostr compatible.</p>
+    <div class="json-preview">{
+  "kind": 30068,
+  "tags": [
+    ["d", "contrato-421"],
+    ["numero", "421"],
+    ["deuda_per_capita_eur", "35597"],
+    ["protocolo", "SatoshiNostr V1.0"],
+    ["alpha_parameter", "0.046144"],
+    ["formula", "10e9 * exp(-0.046144 * (n-1))"],
+    ["ln_address", "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d7978206c69697f687e7e4d7a6c61616879237e7b">[email&#160;protected]</a>"]
+  ],
+  "content": "Contrato #421 — Protocolo SatoshiNostr — Declaración de Soberanía"
+}</div>
+    <p style="font-size:0.8rem;margin-top:1rem;color:var(--texto-muted)">Oracle pubkey: <span class="mono" style="color:var(--oro);font-size:0.65rem">976baa6f835c2d07d2ca79d470f190d04187e7ed51a05a3120dcc4772219e470</span></p>
+  </div>
+</section>
+
+<!-- ══ CTA FINAL ═══════════════════════════════════════════════════ -->
+<div class="cta-final">
+  <div class="seccion-tag">Únete</div>
+  <h2 class="seccion-titulo">496 nodos disponibles.<br>Cuando se agoten, no habrá más.</h2>
+  <p>La Fase Fundador es finita por diseño. Los primeros 500 ciudadanos que registren su declaración son los únicos que recibirán distribución automática del protocolo.</p>
+  <a class="hero-cta" href="https://nostrdebt.github.io/emisorcontratos" target="_blank">
+    Registrar mi declaración soberana →
+  </a>
+  <div class="nodos-disponibles" id="nodos-disp-footer">Cargando inventario desde Nostr...</div>
 </div>
 
-<hr>
-
-<!-- FORK FOR YOUR COUNTRY -->
-<div class="fork-section">
-    <div class="fork-inner">
-        <p class="fork-label">Open Source · Copyleft</p>
-        <h2 class="fork-title">BUILT FOR SPAIN.<br>DESIGNED FOR THE WORLD.</h2>
-        <p class="fork-text">
-            Sovereign debt is not a Spanish problem. It is a universal one.<br><br>
-            This protocol is <strong>open source and copyleft</strong>. Any activist, developer, or citizen
-            in any country can fork it, replace the debt API with their central bank's data,
-            and deploy their own sovereign protocol. <strong>No permission needed. Ever.</strong>
-        </p>
-        <div class="debt-countries">
-            <div class="country"><span class="country-name">🇪🇸 Spain</span><span class="country-debt">~€35,597 / citizen</span></div>
-            <div class="country"><span class="country-name">🇮🇹 Italy</span><span class="country-debt">~€45,000 / citizen</span></div>
-            <div class="country"><span class="country-name">🇫🇷 France</span><span class="country-debt">~€40,000 / citizen</span></div>
-            <div class="country"><span class="country-name">🇺🇸 USA</span><span class="country-debt">~$100,000 / citizen</span></div>
-            <div class="country"><span class="country-name">🇯🇵 Japan</span><span class="country-debt">~$90,000 / citizen</span></div>
-            <div class="country"><span class="country-name">🌍 Your country</span><span class="country-debt">Fork it. Deploy it.</span></div>
-        </div>
-        <p class="fork-cta">Spain has <strong>Contract #1</strong>.<br>What country will have <strong>Contract #2</strong>?</p>
-        <a href="https://github.com/NostrDebt/emisorcontratos" target="_blank" class="btn-fork">Fork on GitHub →</a>
-    </div>
-</div>
-
-<hr>
-
-<div class="cta-bottom">
-    <p class="sec-label" style="justify-content:center"><span id="cta-remaining">---</span> Founder Nodes remaining</p>
-    <p class="cta-big">CLAIM<br>YOUR NODE<span class="cursor"></span></p>
-    <p>~99 nodes cost less than 100 sats.<br>
-    Be a Founder before the protocol opens to every Spanish citizen.<br>
-    Revenue share. Governance. Genesis status. Yours forever.</p>
-    <a href="https://nostrdebt.github.io/emisorcontratos/" class="btn-primary">Open the Protocol →</a>
-</div>
-
+<!-- ══ FOOTER ══════════════════════════════════════════════════════ -->
 <footer>
-    <p>
-        SATOSHINOSTR PROTOCOL V1.0 &nbsp;·&nbsp;
-        <a href="https://nostrdebt.github.io/emisorcontratos/">Launch App</a> &nbsp;·&nbsp;
-        <a href="https://github.com/NostrDebt/emisorcontratos" target="_blank">GitHub</a> &nbsp;·&nbsp;
-        <a href="https://bitcointalk.org/index.php?topic=5569237.0" target="_blank">BitcoinTalk</a> &nbsp;·&nbsp;
-        <a href="https://njump.me/npub1ja465murtsks05k20828puvs6pqc0eld2xs95vfqmnz8wgseu3cqjdn27e" target="_blank">Nostr</a>
-    </p>
-    <p style="margin-top:8px">Open source · Copyleft · Fork it for your country</p>
-    <p style="margin-top:4px">SOVEREIGNTY IS NOT REQUESTED. IT IS EXERCISED.</p>
+  <p>SatoshiNostr Protocol · <a href="https://satoshinostr.github.io/deuda" target="_blank">Informe jurídico</a> · <a href="https://nostrdebt.github.io/emisorcontratos" target="_blank">App</a> · <a href="https://satoshinostr.github.io" target="_blank">Web</a></p>
+  <p style="margin-top:0.5rem;opacity:0.5">Protocolo abierto · Sin empresa · Sin intermediarios</p>
 </footer>
 
-<script>
-    // ─── DEUDA PER CAPITA ────────────────────────────────────────────────────
-    fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU')
-        .then(r => r.json())
-        .then(data => {
-            const pct = parseFloat(data[0].valor);
-            const d = (pct / 100 * 1460000000000) / 42327164;
-            document.getElementById('debt-val').innerText = d.toLocaleString('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-        })
-        .catch(() => { document.getElementById('debt-src').innerText = 'FALLBACK'; });
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function toggleTecnico(){
+  const p=document.getElementById('tecnico-panel');
+  p.classList.toggle('open');
+}
 
-    // ─── BLOCK HEIGHT ────────────────────────────────────────────────────────
-    fetch('https://mempool.space/api/blocks/tip/height')
-        .then(r => r.text())
-        .then(h => { document.getElementById('block-h').innerText = parseInt(h).toLocaleString(); })
-        .catch(() => {});
+const PIB=1460000000000;
+const DNI=42327164;
 
-    // ─── INTERSECTION OBSERVER ───────────────────────────────────────────────
-    const io = new IntersectionObserver(entries => {
-        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.card, .tier, .step, .priv, .charge').forEach(el => io.observe(el));
+function setDeuda(eur,fuente){
+  const fmt=eur.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  document.getElementById('deuda-display').textContent=fmt;
+  document.getElementById('deuda-num').textContent=fmt;
+  document.getElementById('deuda-fuente').textContent=fuente;
+}
 
-    // ─── INVENTARIO DINÁMICO DESDE NOSTR ─────────────────────────────────────
-    // Misma lógica que la app: todos los relays en paralelo.
-    // Lee Kind 30068 del oracle pubkey y actualiza el inventario en tiempo real.
-    const ORACLE_PUBKEY = "976baa6f835c2d07d2ca79d470f190d04187e7ed51a05a3120dcc4772219e470";
-    const NOSTR_RELAYS = [
-        "wss://relay.damus.io",
-        "wss://nos.lol",
-        "wss://relay.nostr.band",
-        "wss://nostr.wine",
-        "wss://relay.primal.net",
-        "wss://nostr-pub.wellorder.net",
-        "wss://relay.snort.social"
-    ];
-    const claimedNodes = new Set();
-    let eoseReceived = false;
+fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU')
+  .then(r=>{if(!r.ok)throw new Error();return r.json()})
+  .then(d=>{
+    const pct=parseFloat(d[0].valor);
+    if(isNaN(pct))throw new Error();
+    setDeuda((pct/100*PIB)/DNI,'Banco de España');
+  })
+  .catch(()=>{
+    fetch('https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/gov_10dd_edpt1?geo=ES&na_item=GD&sector=S13&unit=PC_GDP&lastTimePeriod=1')
+      .then(r=>{if(!r.ok)throw new Error();return r.json()})
+      .then(d=>{
+        const vals=Object.values(d.value);
+        const pct=parseFloat(vals[vals.length-1]);
+        if(isNaN(pct))throw new Error();
+        setDeuda((pct/100*PIB)/DNI,'Eurostat');
+      })
+      .catch(()=>setDeuda(35597,'Banco de España'));
+  });
 
-    function updateInventory() {
-        const available = 500 - claimedNodes.size;
-        // Ticker hero
-        const tickerEl = document.getElementById('ticker-available');
-        if (tickerEl) tickerEl.innerText = available;
-        // Stat bar
-        const statEl = document.getElementById('stat-available');
-        if (statEl) statEl.innerText = available;
-        // CTA bottom
-        const ctaEl = document.getElementById('cta-remaining');
-        if (ctaEl) ctaEl.innerText = available;
-    }
-
-    // Fallback global: si tras 12s ningún relay respondió, mostrar 497
-    // (valor conocido: #1 génesis + #444 + #494)
-    const globalTimeout = setTimeout(() => {
-        if (!eoseReceived) {
-            claimedNodes.add(1); claimedNodes.add(444); claimedNodes.add(494);
-            updateInventory();
-        }
-    }, 12000);
-
-    NOSTR_RELAYS.forEach(relayUrl => {
-        let ws;
-        try { ws = new WebSocket(relayUrl); } catch(e) { return; }
-
-        ws.onopen = () => {
-            ws.send(JSON.stringify([
-                "REQ", "inventory-sub",
-                { kinds: [30068], authors: [ORACLE_PUBKEY] }
-            ]));
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg[0] === "EVENT") {
-                    const numeroTag = msg[2].tags.find(t => t[0] === "numero");
-                    if (numeroTag) {
-                        const n = parseInt(numeroTag[1]);
-                        if (!isNaN(n) && n >= 1 && n <= 500) {
-                            const isNew = !claimedNodes.has(n);
-                            claimedNodes.add(n);
-                            if (isNew) updateInventory();
-                        }
-                    }
-                }
-                if (msg[0] === "EOSE" && !eoseReceived) {
-                    eoseReceived = true;
-                    clearTimeout(globalTimeout);
-                    updateInventory();
-                }
-            } catch(e) {}
-        };
-
-        ws.onerror = () => {};
-        ws.onclose = () => {
-            if (eoseReceived) {
-                setTimeout(() => {
-                    try {
-                        const r = new WebSocket(relayUrl);
-                        r.onopen = () => r.send(JSON.stringify(["REQ","inventory-sub",{kinds:[30068],authors:[ORACLE_PUBKEY]}]));
-                        r.onmessage = (ev) => {
-                            try {
-                                const m = JSON.parse(ev.data);
-                                if (m[0]==="EVENT") {
-                                    const t = m[2].tags.find(t=>t[0]==="numero");
-                                    if (t) { const n=parseInt(t[1]); if(!isNaN(n)&&n>=1&&n<=500&&!claimedNodes.has(n)){claimedNodes.add(n);updateInventory();} }
-                                }
-                            } catch(e) {}
-                        };
-                    } catch(e) {}
-                }, 15000);
-            }
-        };
-    });
-</script>
-</body>
-</html>
+fetch('https://raw.githubusercontent.com/NostrDebt/emisorcontratos/main/inventory.json')
+  .then(r=>r.json())
+  .then(d=>{
+    const vendidos=d.sold||4;
+    const disp=500-vendidos;
+    document.getElementById('nodos-disp-footer').textContent=disp+' / 500 nodos disponibles · '+vendidos+' fundadores registrados';
+    document.getE
