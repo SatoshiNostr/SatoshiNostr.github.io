@@ -453,6 +453,7 @@ footer a{color:var(--oro);text-decoration:none}
     </div>
   </div>
 
+  <script>function toggleTecnico(){document.getElementById('tecnico-panel').classList.toggle('open');}</script>
   <button class="tecnico-toggle" onclick="toggleTecnico()">[ + Modo avanzado — detalles técnicos del protocolo ]</button>
   <div id="tecnico-panel" class="tecnico-panel">
     <p style="font-size:0.85rem;margin-bottom:1rem">Cada Nodo Fundador es un evento Nostr de Kind 30068 firmado con la clave privada del oracle del protocolo. El Event ID es único e irrepetible. Puedes verificarlo en cualquier relay Nostr compatible.</p>
@@ -492,11 +493,6 @@ footer a{color:var(--oro);text-decoration:none}
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-function toggleTecnico(){
-  const p=document.getElementById('tecnico-panel');
-  p.classList.toggle('open');
-}
-
 const PIB=1460000000000;
 const DNI=42327164;
 
