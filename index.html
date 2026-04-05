@@ -101,6 +101,21 @@ body{
   border:none;
 }
 .hero-cta:hover{background:var(--oro-claro);transform:translateY(-1px)}
+.hero-cta-sec{
+  display:inline-block;
+  background:none;
+  color:var(--oro);
+  font-family:'Space Mono',monospace;
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  padding:1rem 2rem;
+  border:1px solid var(--oro);
+  cursor:pointer;
+  transition:background 0.2s,color 0.2s;
+}
+.hero-cta-sec:hover{background:var(--oro);color:var(--negro)}
 .hero-sub{
   margin-top:1.5rem;
   font-size:0.85rem;
@@ -330,9 +345,10 @@ footer a{color:var(--oro);text-decoration:none}
   <div class="hero-deuda" id="deuda-num">35.597 €</div>
   <div class="hero-deuda-label mono">deuda pública per cápita · fuente: <span id="deuda-fuente">Banco de España</span></div>
 
-  <button class="hero-cta" onclick="document.getElementById('que-es').scrollIntoView({behavior:'smooth'})">
-    Registrar mi declaración soberana →
-  </button>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+    <a class="hero-cta" href="https://nostrdebt.github.io/emisorcontratos" target="_blank">Registrar mi declaración soberana →</a>
+    <button class="hero-cta-sec" onclick="document.getElementById('que-es').scrollIntoView({behavior:'smooth'})">¿Qué es esto? ↓</button>
+  </div>
   <p class="hero-sub" id="hero-sub-txt">496 / 500 nodos disponibles · desde 1 sat</p>
 
   <div class="scroll-hint">↓ &nbsp; leer más</div>
