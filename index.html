@@ -470,6 +470,7 @@ footer a{color:var(--oro);text-decoration:none}
   "content": "Contrato #421 — Protocolo SatoshiNostr — Declaración de Soberanía"
 }</div>
     <p style="font-size:0.8rem;margin-top:1rem;color:var(--texto-muted)">Oracle pubkey: <span class="mono" style="color:var(--oro);font-size:0.65rem">976baa6f835c2d07d2ca79d470f190d04187e7ed51a05a3120dcc4772219e470</span></p>
+    <p style="font-size:0.8rem;margin-top:1rem;color:var(--texto-muted)">Verificar ejemplo real (Fundador #421) → <a href="https://njump.me/d10548df4f8c2c00f67bfeda21552ea06570937261b64575c93d065fecf3f8d3" target="_blank" style="color:var(--oro);font-family:'Space Mono',monospace;font-size:0.65rem">njump.me/d10548df...</a></p>
   </div>
 </section>
 
@@ -525,7 +526,7 @@ fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&serie
       .catch(()=>setDeuda(35597,'Banco de España'));
   });
 
-fetch('https://raw.githubusercontent.com/NostrDebt/emisorcontratos/main/inventory.json')
+fetch('https://gist.githubusercontent.com/SatoshiNostr/6f8d077663126701055862201e36f95d/raw/satoshinostr-inventory.json', {cache: 'no-cache'})
   .then(r=>r.json())
   .then(d=>{
     const vendidos=d.sold||4;
