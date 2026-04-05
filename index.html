@@ -522,7 +522,7 @@ fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&serie
       .catch(()=>setDeuda(35597,'Banco de España'));
   });
 
-fetch('https://gist.githubusercontent.com/SatoshiNostr/6f8d077663126701055862201e36f95d/raw/satoshinostr-inventory.json', {cache: 'no-cache'})
+fetch('/inventory.json', {cache: 'no-cache'})
   .then(r=>r.json())
   .then(d=>{
     const vendidos=d.sold||4;
