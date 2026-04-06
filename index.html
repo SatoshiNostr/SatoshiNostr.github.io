@@ -349,7 +349,7 @@ footer a{color:var(--oro);text-decoration:none}
     <a class="hero-cta" href="https://nostrdebt.github.io/emisorcontratos" target="_blank">Registrar mi declaración soberana →</a>
     <button class="hero-cta-sec" onclick="document.getElementById('que-es').scrollIntoView({behavior:'smooth'})">¿Qué es esto? ↓</button>
   </div>
-  <p class="hero-sub" id="hero-sub-txt">496 / 500 nodos disponibles · desde 1 sat</p>
+  <p class="hero-sub" id="hero-sub-txt">Cargando nodos disponibles...</p>
 
   <div class="scroll-hint">↓ &nbsp; leer más</div>
 </div>
@@ -453,7 +453,6 @@ footer a{color:var(--oro);text-decoration:none}
     </div>
   </div>
 
-  <script>function toggleTecnico(){document.getElementById('tecnico-panel').classList.toggle('open');}</script>
   <button class="tecnico-toggle" onclick="toggleTecnico()">[ + Modo avanzado — detalles técnicos del protocolo ]</button>
   <div id="tecnico-panel" class="tecnico-panel">
     <p style="font-size:0.85rem;margin-bottom:1rem">Cada Nodo Fundador es un evento Nostr de Kind 30068 firmado con la clave privada del oracle del protocolo. El Event ID es único e irrepetible. Puedes verificarlo en cualquier relay Nostr compatible.</p>
@@ -466,7 +465,7 @@ footer a{color:var(--oro);text-decoration:none}
     ["protocolo", "SatoshiNostr V1.0"],
     ["alpha_parameter", "0.046144"],
     ["formula", "10e9 * exp(-0.046144 * (n-1))"],
-    ["ln_address", "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d7978206c69697f687e7e4d7a6c61616879237e7b">[email&#160;protected]</a>"]
+    ["ln_address", "tu-wallet [at] lightning.address"]
   ],
   "content": "Contrato #421 — Protocolo SatoshiNostr — Declaración de Soberanía"
 }</div>
@@ -478,12 +477,12 @@ footer a{color:var(--oro);text-decoration:none}
 <!-- ══ CTA FINAL ═══════════════════════════════════════════════════ -->
 <div class="cta-final">
   <div class="seccion-tag">Únete</div>
-  <h2 class="seccion-titulo">496 nodos disponibles.<br>Cuando se agoten, no habrá más.</h2>
+  <h2 class="seccion-titulo" id="cta-titulo">495 nodos disponibles.<br>Cuando se agoten, no habrá más.</h2>
   <p>La Fase Fundador es finita por diseño. Los primeros 500 ciudadanos que registren su declaración son los únicos que recibirán distribución automática del protocolo.</p>
   <a class="hero-cta" href="https://nostrdebt.github.io/emisorcontratos" target="_blank">
     Registrar mi declaración soberana →
   </a>
-  <div class="nodos-disponibles" id="nodos-disp-footer">Cargando inventario desde Nostr...</div>
+  <div class="nodos-disponibles" id="nodos-disp-footer">Cargando inventario...</div>
 </div>
 
 <!-- ══ FOOTER ══════════════════════════════════════════════════════ -->
@@ -492,40 +491,69 @@ footer a{color:var(--oro);text-decoration:none}
   <p style="margin-top:0.5rem;opacity:0.5">Protocolo abierto · Sin empresa · Sin intermediarios</p>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-const PIB=1460000000000;
-const DNI=42327164;
+<script>
+/* ── toggleTecnico ── */
+function toggleTecnico(){
+  document.getElementById('tecnico-panel').classList.toggle('open');
+}
 
-function setDeuda(eur,fuente){
-  const fmt=eur.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  document.getElementById('deuda-display').textContent=fmt;
-  document.getElementById('deuda-num').textContent=fmt;
-  document.getElementById('deuda-fuente').textContent=fuente;
+/* ── Deuda per cápita en tiempo real ── */
+const PIB = 1460000000000;
+const DNI = 42327164;
+
+function setDeuda(eur, fuente){
+  const fmt = eur.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  document.getElementById('deuda-display').textContent = fmt;
+  document.getElementById('deuda-num').textContent = fmt;
+  document.getElementById('deuda-fuente').textContent = fuente;
 }
 
 fetch('https://app.bde.es/bierest/resources/srdatosapp/favoritas?idioma=es&series=DTNPDE2010_P0000P_PS_APU')
-  .then(r=>{if(!r.ok)throw new Error();return r.json()})
-  .then(d=>{
-    const pct=parseFloat(d[0].valor);
-    if(isNaN(pct))throw new Error();
-    setDeuda((pct/100*PIB)/DNI,'Banco de España');
+  .then(r => { if(!r.ok) throw new Error(); return r.json(); })
+  .then(d => {
+    const pct = parseFloat(d[0].valor);
+    if(isNaN(pct)) throw new Error();
+    setDeuda((pct/100*PIB)/DNI, 'Banco de España');
   })
-  .catch(()=>{
+  .catch(() => {
     fetch('https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/gov_10dd_edpt1?geo=ES&na_item=GD&sector=S13&unit=PC_GDP&lastTimePeriod=1')
-      .then(r=>{if(!r.ok)throw new Error();return r.json()})
-      .then(d=>{
-        const vals=Object.values(d.value);
-        const pct=parseFloat(vals[vals.length-1]);
-        if(isNaN(pct))throw new Error();
-        setDeuda((pct/100*PIB)/DNI,'Eurostat');
+      .then(r => { if(!r.ok) throw new Error(); return r.json(); })
+      .then(d => {
+        const vals = Object.values(d.value);
+        const pct = parseFloat(vals[vals.length-1]);
+        if(isNaN(pct)) throw new Error();
+        setDeuda((pct/100*PIB)/DNI, 'Eurostat');
       })
-      .catch(()=>setDeuda(35597,'Banco de España'));
+      .catch(() => setDeuda(35597, 'Banco de España'));
   });
 
-fetch('/inventory.json', {cache: 'no-cache'})
-  .then(r=>r.json())
-  .then(d=>{
-    const vendidos=d.sold||4;
-    const disp=500-vendidos;
-    document.getElementById('nodos-disp-footer').textContent=disp+' / 500 nodos disponibles · '+vendidos+' fundadores registrados';
-    document.getE
+/* ── Inventario de nodos ── */
+fetch('https://raw.githubusercontent.com/SatoshiNostr/SatoshiNostr.github.io/main/inventory.json?t=' + Date.now())
+  .then(r => { if(!r.ok) throw new Error(); return r.json(); })
+  .then(d => {
+    const vendidos = d.total_sold || d.sold || 5;
+    const disp = 500 - vendidos;
+
+    // Hero
+    const heroSub = document.getElementById('hero-sub-txt');
+    if(heroSub) heroSub.textContent = disp + ' / 500 nodos disponibles · desde 1 sat';
+
+    // CTA título
+    const ctaTitulo = document.getElementById('cta-titulo');
+    if(ctaTitulo) ctaTitulo.innerHTML = disp + ' nodos disponibles.<br>Cuando se agoten, no habrá más.';
+
+    // Footer
+    const footer = document.getElementById('nodos-disp-footer');
+    if(footer) footer.textContent = disp + ' / 500 nodos disponibles · ' + vendidos + ' fundadores registrados';
+  })
+  .catch(() => {
+    // Fallback con valores correctos si el fetch falla
+    const disp = 500 - 5;
+    const heroSub = document.getElementById('hero-sub-txt');
+    if(heroSub) heroSub.textContent = disp + ' / 500 nodos disponibles · desde 1 sat';
+    const footer = document.getElementById('nodos-disp-footer');
+    if(footer) footer.textContent = disp + ' / 500 nodos disponibles · 5 fundadores registrados';
+  });
+</script>
+</body>
+</html>
