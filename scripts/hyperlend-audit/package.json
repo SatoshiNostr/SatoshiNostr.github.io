@@ -1,0 +1,24 @@
+{
+  "name": "hyperlend-audit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "READ-ONLY liquidation audit for HyperLend on HyperEVM",
+  "scripts": {
+    "audit":    "ts-node --project tsconfig.json index.ts",
+    "discover": "ts-node --project tsconfig.json index.ts --step=discover",
+    "backfill": "ts-node --project tsconfig.json index.ts --step=backfill",
+    "enrich":   "ts-node --project tsconfig.json index.ts --step=enrich",
+    "report":   "ts-node --project tsconfig.json index.ts --step=report"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.11.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
