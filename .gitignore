@@ -1,0 +1,8 @@
+.env
+.env.local
+node_modules/
+bot/data/*.db
+bot/data/*.db-shm
+bot/data/*.db-wal
+scripts/hyperlend-audit/dist/
+scripts/hyperlend-audit/discovered-config.json

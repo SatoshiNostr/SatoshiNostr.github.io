@@ -45,7 +45,10 @@ async function tryGetPoolDataProvider(
     // Some Aave forks use getAddress(bytes32) with keccak id
     try {
       const id = ethers.keccak256(ethers.toUtf8Bytes('DATA_PROVIDER'));
-      const addr = await withRetry(() => pap.getAddress(id) as Promise<string>, 'getAddress(DATA_PROVIDER)');
+      const addr = await withRetry(
+        () => pap.getFunction('getAddress(bytes32)')(id) as Promise<string>,
+        'getAddress(DATA_PROVIDER)',
+      );
       if (addr && addr !== ethers.ZeroAddress) return addr;
     } catch { /* ignore */ }
   }
@@ -151,8 +154,8 @@ export async function discover(mp: MultiProvider): Promise<DiscoveredConfig> {
 
   // 3. Resolve canonical addresses from PoolAddressesProvider
   const pap = new ethers.Contract(KNOWN_ADDRESSES.poolAddressesProvider, POOL_ADDRESSES_PROVIDER_ABI, provider);
-  let poolAddr = KNOWN_ADDRESSES.pool;
-  let oracleAddr = KNOWN_ADDRESSES.oracle;
+  let poolAddr: string = KNOWN_ADDRESSES.pool;
+  let oracleAddr: string = KNOWN_ADDRESSES.oracle;
 
   try {
     const [chainPool, chainOracle] = await Promise.all([
