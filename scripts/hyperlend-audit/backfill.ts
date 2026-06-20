@@ -47,30 +47,29 @@ async function fetchGasData(
   txHashes: string[],
 ): Promise<Map<string, { gasUsed: number; effectiveGasPrice: string }>> {
   const result = new Map<string, { gasUsed: number; effectiveGasPrice: string }>();
-  const BATCH = 10;
-  for (let i = 0; i < txHashes.length; i += BATCH) {
-    const batch = txHashes.slice(i, i + BATCH);
-    await Promise.all(
-      batch.map(async hash => {
-        try {
-          const receipt = await withRetry(
-            () => mp.provider.getTransactionReceipt(hash),
-            `getReceipt(${hash.slice(0, 10)})`,
-            3,
-            1_000,
-          );
-          if (receipt) {
-            result.set(hash, {
-              gasUsed: Number(receipt.gasUsed),
-              effectiveGasPrice: receipt.gasPrice.toString(),
-            });
-          }
-        } catch {
-          // Best-effort — gas data is optional for the audit
-        }
-      }),
-    );
-    if (i + BATCH < txHashes.length) await sleep(300);
+  // Sequential — ethers v6 internally batches concurrent requests, which trips dRPC free-tier limit (max 3 per batch)
+  for (let i = 0; i < txHashes.length; i++) {
+    const hash = txHashes[i]!;
+    try {
+      const receipt = await withRetry(
+        () => mp.provider.getTransactionReceipt(hash),
+        `getReceipt(${hash.slice(0, 10)})`,
+        3,
+        1_000,
+      );
+      if (receipt) {
+        result.set(hash, {
+          gasUsed: Number(receipt.gasUsed),
+          effectiveGasPrice: receipt.gasPrice.toString(),
+        });
+      }
+    } catch {
+      // Best-effort — gas data is optional for the audit
+    }
+    if (i % 20 === 0 || i === txHashes.length - 1) {
+      process.stdout.write(`\r  [backfill] receipts: ${i + 1}/${txHashes.length}  `);
+    }
+    if (i > 0 && i % 10 === 0) await sleep(150);
   }
   return result;
 }
@@ -158,13 +157,16 @@ export async function backfill(mp: MultiProvider): Promise<void> {
     return;
   }
 
-  // Group logs by block to batch timestamp lookups
+  // Group logs by block to fetch timestamps
   const blockNumbers = [...new Set(logs.map(l => l.blockNumber))];
   console.log(`  [backfill] Fetching timestamps for ${blockNumbers.length} unique blocks...`);
-  const BLOCK_BATCH = 20;
-  for (let i = 0; i < blockNumbers.length; i += BLOCK_BATCH) {
-    await Promise.all(blockNumbers.slice(i, i + BLOCK_BATCH).map(bn => getBlockTimestamp(mp, bn)));
-    if (i % 200 === 0) process.stdout.write(`\r  [backfill] timestamps: ${Math.min(i + BLOCK_BATCH, blockNumbers.length)}/${blockNumbers.length}  `);
+  // Sequential — ethers v6 batches concurrent getBlock() calls internally, tripping dRPC free-tier limit
+  for (let i = 0; i < blockNumbers.length; i++) {
+    await getBlockTimestamp(mp, blockNumbers[i]!);
+    if (i % 20 === 0 || i === blockNumbers.length - 1) {
+      process.stdout.write(`\r  [backfill] timestamps: ${i + 1}/${blockNumbers.length}  `);
+    }
+    if (i > 0 && i % 10 === 0) await sleep(150);
   }
   console.log();
 
