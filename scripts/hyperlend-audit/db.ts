@@ -232,6 +232,10 @@ export function countLiquidations(db: Database.Database): number {
   return (db.prepare('SELECT COUNT(*) as n FROM liquidations').get() as { n: number }).n;
 }
 
+export function resetEnrichment(db: Database.Database): number {
+  return db.prepare('UPDATE liquidations SET enriched = 0').run().changes;
+}
+
 export function getUnenrichedLiquidations(db: Database.Database): LiquidationRaw[] {
   return db.prepare('SELECT * FROM liquidations WHERE enriched = 0 ORDER BY block_number').all() as LiquidationRaw[];
 }

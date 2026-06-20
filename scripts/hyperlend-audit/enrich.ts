@@ -5,6 +5,9 @@
  *   1. Resolves asset symbol/decimals (from DB cache or on-chain)
  *   2. Gets asset price in USD from HyperLend oracle
  *      - Tries historical price at exact block (requires archive RPC)
+ *        ⚠ A return of 0n from a historical call is treated as invalid
+ *          (oracle not yet initialised at that block) and falls through
+ *          to the current-price fetch.
  *      - Falls back to daily cached price
  *   3. Computes gross profit (= liquidated collateral USD - debt covered USD)
  *   4. Estimates gas cost in USD (HYPE is the gas token)
@@ -12,6 +15,11 @@
  *
  * All estimated values are clearly labeled in price_source field.
  * READ-ONLY. Idempotent.
+ *
+ * Env knobs:
+ *   RESET_ENRICHMENT=1   — mark all rows unenriched before running (re-enrich)
+ *   USE_HISTORICAL_PRICES=1 — try oracle at exact block first (default: 1)
+ *   HYPE_PRICE_USD=<n>   — override HYPE gas-token price
  */
 
 import { ethers } from 'ethers';
@@ -22,6 +30,7 @@ import {
   updateEnrichment,
   getAsset,
   upsertAsset,
+  resetEnrichment,
 } from './db';
 import { MultiProvider, withRetry, sleep } from './rpc';
 import { ORACLE_ABI, ERC20_ABI, DATA_PROVIDER_ABI } from './config';
@@ -65,13 +74,17 @@ async function fetchOraclePriceAtBlock(
         2,
         1_000,
       );
-      return { priceUsd: Number(raw) / Number(baseCurrencyUnit), source: 'oracle_block' };
+      // 0n means the oracle had no price at this block (contract not deployed yet
+      // or price feed not initialised). Treat as a miss and fall through.
+      if (raw > 0n) {
+        return { priceUsd: Number(raw) / Number(baseCurrencyUnit), source: 'oracle_block' };
+      }
     } catch {
       // Archive call failed — fall back to current price
     }
   }
 
-  // Daily approximation: fetch current price and cache it
+  // Daily approximation: fetch current price
   try {
     const raw = await withRetry(
       () => oracle.getAssetPrice(assetAddr) as Promise<bigint>,
@@ -79,7 +92,11 @@ async function fetchOraclePriceAtBlock(
       3,
       1_000,
     );
-    return { priceUsd: Number(raw) / Number(baseCurrencyUnit), source: 'oracle_daily' };
+    if (raw > 0n) {
+      return { priceUsd: Number(raw) / Number(baseCurrencyUnit), source: 'oracle_daily' };
+    }
+    // Oracle returned 0 — asset not registered or oracle not functioning
+    return { priceUsd: 0, source: 'estimated' };
   } catch {
     return { priceUsd: 0, source: 'estimated' };
   }
@@ -117,13 +134,11 @@ async function resolveAsset(
     return info;
   }
 
-  // Fetch from chain
+  // Fetch from chain — 3 calls, kept sequential to stay under dRPC batch limit
   const erc20 = new ethers.Contract(address, ERC20_ABI, mp.provider);
-  const [symbol, name, decimals] = await Promise.all([
-    withRetry(() => erc20.symbol() as Promise<string>, `symbol(${laddr})`).catch(() => 'UNKNOWN'),
-    withRetry(() => erc20.name() as Promise<string>, `name(${laddr})`).catch(() => 'UNKNOWN'),
-    withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${laddr})`).catch(() => 18n),
-  ]);
+  const symbol = await withRetry(() => erc20.symbol() as Promise<string>, `symbol(${laddr})`).catch(() => 'UNKNOWN');
+  const name   = await withRetry(() => erc20.name()   as Promise<string>, `name(${laddr})`).catch(() => 'UNKNOWN');
+  const decimals = await withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${laddr})`).catch(() => 18n);
 
   let liquidationBonusBps = 0;
   let liquidationThresholdBps = 0;
@@ -168,7 +183,7 @@ function estimateGasCostUsd(
   return gasCostHype * hypePriceUsd;
 }
 
-// ---- Enrich single liquidation ----
+// ---- Enrich single liquidation — all oracle calls sequential ----
 
 async function enrichOne(
   db: ReturnType<typeof initDb>,
@@ -179,15 +194,13 @@ async function enrichOne(
   hypePriceUsd: number,
   useHistorical: boolean,
 ): Promise<void> {
-  const [collateralInfo, debtInfo] = await Promise.all([
-    resolveAsset(db, mp, cfg.poolDataProvider, liq.collateral_asset),
-    resolveAsset(db, mp, cfg.poolDataProvider, liq.debt_asset),
-  ]);
+  // Resolve asset metadata sequentially to avoid batching ERC20 calls
+  const collateralInfo = await resolveAsset(db, mp, cfg.poolDataProvider, liq.collateral_asset);
+  const debtInfo       = await resolveAsset(db, mp, cfg.poolDataProvider, liq.debt_asset);
 
-  const [collPrice, debtPrice] = await Promise.all([
-    fetchOraclePriceAtBlock(mp, cfg.oracle, collateralInfo.address, liq.block_number, baseCurrencyUnit, useHistorical),
-    fetchOraclePriceAtBlock(mp, cfg.oracle, debtInfo.address, liq.block_number, baseCurrencyUnit, useHistorical),
-  ]);
+  // Oracle calls sequential — each is one eth_call, dRPC limit is 3 per batch
+  const collPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, collateralInfo.address, liq.block_number, baseCurrencyUnit, useHistorical);
+  const debtPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, debtInfo.address, liq.block_number, baseCurrencyUnit, useHistorical);
 
   const debtToCoverHuman = Number(BigInt(liq.debt_to_cover)) / 10 ** debtInfo.decimals;
   const collAmountHuman = Number(BigInt(liq.liquidated_collateral_amount)) / 10 ** collateralInfo.decimals;
@@ -231,6 +244,12 @@ export async function enrich(mp: MultiProvider): Promise<void> {
   const baseCurrencyUnit = BigInt(cfg.baseCurrencyUnit);
   const useHistorical = (process.env['USE_HISTORICAL_PRICES'] ?? '1') === '1';
 
+  // Optional: reset all enrichment flags so this run overwrites previous results
+  if ((process.env['RESET_ENRICHMENT'] ?? '0') === '1') {
+    const n = resetEnrichment(db);
+    console.log(`  [enrich] RESET_ENRICHMENT=1 — marked ${n} liquidation(s) for re-enrichment`);
+  }
+
   // HYPE price for gas cost estimation (HYPE is the native gas token on HyperEVM)
   let hypePriceUsd = parseFloat(process.env['HYPE_PRICE_USD'] ?? '0');
   if (hypePriceUsd === 0) {
@@ -242,9 +261,11 @@ export async function enrich(mp: MultiProvider): Promise<void> {
       if (assetInfo && assetInfo.symbol?.toUpperCase()?.includes('HYPE')) {
         try {
           const raw = await withRetry(() => oracle.getAssetPrice(r) as Promise<bigint>, 'getAssetPrice(HYPE)');
-          hypePriceUsd = Number(raw) / Number(baseCurrencyUnit);
-          console.log(`  [enrich] HYPE price from oracle: $${hypePriceUsd.toFixed(2)}`);
-          break;
+          if (raw > 0n) {
+            hypePriceUsd = Number(raw) / Number(baseCurrencyUnit);
+            console.log(`  [enrich] HYPE price from oracle: $${hypePriceUsd.toFixed(2)}`);
+            break;
+          }
         } catch { /* ignore */ }
       }
     }
@@ -255,31 +276,46 @@ export async function enrich(mp: MultiProvider): Promise<void> {
     console.log(`  [enrich] HYPE price from env: $${hypePriceUsd.toFixed(2)}`);
   }
 
+  // Pre-flight oracle check — shows raw oracle response before main loop
+  const sampleAddrs = (db.prepare('SELECT DISTINCT collateral_asset FROM liquidations LIMIT 3').all() as { collateral_asset: string }[]).map(r => r.collateral_asset);
+  if (sampleAddrs.length > 0) {
+    console.log('  [enrich] Oracle pre-flight check (current prices):');
+    const oracle = new ethers.Contract(cfg.oracle, ORACLE_ABI, mp.provider);
+    for (const addr of sampleAddrs) {
+      try {
+        const raw = await withRetry(() => oracle.getAssetPrice(addr) as Promise<bigint>, `preflight(${addr.slice(0, 10)})`, 2, 500);
+        const usd = raw > 0n ? Number(raw) / Number(baseCurrencyUnit) : 0;
+        console.log(`    ${addr.slice(0, 12)}… raw=${raw}  →  $${usd.toFixed(4)}${raw === 0n ? ' ⚠ ZERO — oracle may not support this asset' : ''}`);
+      } catch (err) {
+        console.log(`    ${addr.slice(0, 12)}… ERROR: ${String(err).slice(0, 100)}`);
+      }
+    }
+  }
+
   const pending = getUnenrichedLiquidations(db) as unknown as DbRow[];
   console.log(`  [enrich] ${pending.length} liquidation(s) to enrich`);
   if (pending.length === 0) {
-    console.log('  [enrich] Nothing to do.');
+    console.log('  [enrich] Nothing to do. Run with RESET_ENRICHMENT=1 to re-enrich.');
     return;
   }
 
   let done = 0;
   let errors = 0;
-  const CONCURRENCY = 3; // Limit concurrent oracle calls
 
-  for (let i = 0; i < pending.length; i += CONCURRENCY) {
-    const batch = pending.slice(i, i + CONCURRENCY);
-    await Promise.all(
-      batch.map(liq =>
-        enrichOne(db, mp, liq, cfg, baseCurrencyUnit, hypePriceUsd, useHistorical)
-          .then(() => done++)
-          .catch(err => {
-            errors++;
-            console.warn(`\n  [enrich] Failed for ${liq.tx_hash}: ${String(err).slice(0, 80)}`);
-          }),
-      ),
-    );
-    process.stdout.write(`\r  [enrich] ${done + errors}/${pending.length} processed (${errors} errors)   `);
-    if (i + CONCURRENCY < pending.length) await sleep(200);
+  for (let i = 0; i < pending.length; i++) {
+    const liq = pending[i]!;
+    try {
+      await enrichOne(db, mp, liq, cfg, baseCurrencyUnit, hypePriceUsd, useHistorical);
+      done++;
+    } catch (err) {
+      errors++;
+      console.warn(`\n  [enrich] Failed for ${liq.tx_hash}: ${String(err).slice(0, 80)}`);
+    }
+    if (i % 10 === 0 || i === pending.length - 1) {
+      process.stdout.write(`\r  [enrich] ${done + errors}/${pending.length} processed (${errors} errors)   `);
+    }
+    // Small pause every 20 liquidations to stay well under dRPC rate limits
+    if (i > 0 && i % 20 === 0) await sleep(200);
   }
 
   console.log(`\n  [enrich] ✓ Enriched: ${done}, Errors: ${errors}`);
