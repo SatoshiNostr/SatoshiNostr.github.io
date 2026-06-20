@@ -63,6 +63,7 @@ async function fetchOraclePriceAtBlock(
   blockNumber: number,
   baseCurrencyUnit: bigint,
   useHistorical: boolean,
+  hypePriceOverride = 0,
 ): Promise<{ priceUsd: number; source: EnrichedFields['priceSource'] }> {
   const oracle = new ethers.Contract(oracleAddr, ORACLE_ABI, mp.provider);
 
@@ -95,11 +96,13 @@ async function fetchOraclePriceAtBlock(
     if (raw > 0n) {
       return { priceUsd: Number(raw) / Number(baseCurrencyUnit), source: 'oracle_daily' };
     }
-    // Oracle returned 0 — asset not registered or oracle not functioning
-    return { priceUsd: 0, source: 'estimated' };
-  } catch {
-    return { priceUsd: 0, source: 'estimated' };
+  } catch { /* fall through */ }
+
+  // Oracle can't price this asset — use the override (e.g. native HYPE precompile)
+  if (hypePriceOverride > 0) {
+    return { priceUsd: hypePriceOverride, source: 'oracle_daily' };
   }
+  return { priceUsd: 0, source: 'estimated' };
 }
 
 // ---- Asset info resolver (DB cache → chain fallback) ----
@@ -115,14 +118,7 @@ async function resolveAsset(
   const laddr = address.toLowerCase();
   if (assetCache.has(laddr)) return assetCache.get(laddr)!;
 
-  // Try DB first (getAsset already maps snake_case → camelCase)
-  const cached = getAsset(db, laddr);
-  if (cached && cached.symbol) {
-    assetCache.set(laddr, cached);
-    return cached;
-  }
-
-  // Precompile shortcut (e.g. HYPE at 0x5555...5555 returns 500 on ERC20 calls)
+  // Precompile shortcut — must come before DB cache to avoid stale UNKNOWN entries
   const PRECOMPILES: Record<string, { symbol: string; name: string; decimals: number }> = {
     '0x5555555555555555555555555555555555555555': { symbol: 'HYPE', name: 'Hyperliquid', decimals: 18 },
   };
@@ -134,12 +130,17 @@ async function resolveAsset(
     return info;
   }
 
-  // Fetch from chain — 3 calls, kept sequential to stay under dRPC batch limit
-  const erc20 = new ethers.Contract(address, ERC20_ABI, mp.provider);
-  const symbol = await withRetry(() => erc20.symbol() as Promise<string>, `symbol(${laddr})`).catch(() => 'UNKNOWN');
-  const name   = await withRetry(() => erc20.name()   as Promise<string>, `name(${laddr})`).catch(() => 'UNKNOWN');
-  const decimals = await withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${laddr})`).catch(() => 18n);
+  // Try DB cache — skip entries with symbol='UNKNOWN' because they may carry
+  // a wrong defaulted decimals value (e.g. 18 instead of 6 for USDC).
+  const cached = getAsset(db, laddr);
+  if (cached && cached.symbol && cached.symbol !== 'UNKNOWN') {
+    assetCache.set(laddr, cached);
+    return cached;
+  }
 
+  // Fetch decimals from DataProvider first — it knows the canonical decimal count
+  // for each reserve even when ERC20.decimals() is non-standard on HyperEVM.
+  let decimals = 18;
   let liquidationBonusBps = 0;
   let liquidationThresholdBps = 0;
   let ltvBps = 0;
@@ -150,21 +151,35 @@ async function resolveAsset(
         () => dp.getReserveConfigurationData(address) as Promise<[bigint, bigint, bigint, bigint, bigint, boolean, boolean, boolean, boolean, boolean]>,
         `getReserveConfig(${laddr})`,
       );
+      const dpDec = Number(cfg[0]);
+      if (dpDec > 0 && dpDec <= 18) decimals = dpDec;  // cfg[0] = decimals per Aave V3 DataProvider ABI
       ltvBps = Number(cfg[1]);
       liquidationThresholdBps = Number(cfg[2]);
       liquidationBonusBps = Number(cfg[3]);
-    } catch { /* ignore */ }
+    } catch { /* ignore — fall back to ERC20 */ }
+  }
+
+  // ERC20 for symbol/name (best effort) and decimals if DataProvider didn't supply them
+  const erc20 = new ethers.Contract(address, ERC20_ABI, mp.provider);
+  const symbol = await withRetry(() => erc20.symbol() as Promise<string>, `symbol(${laddr})`).catch(() => 'UNKNOWN');
+  const name   = await withRetry(() => erc20.name()   as Promise<string>, `name(${laddr})`).catch(() => 'UNKNOWN');
+  if (decimals === 18) {
+    // Only fall back to ERC20 decimals if DataProvider gave us nothing — avoids
+    // overwriting a known-good DataProvider value with a failed ERC20 default.
+    const erc20dec = await withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${laddr})`).catch(() => 18n);
+    decimals = Number(erc20dec);
   }
 
   const info: AssetInfo = {
     address: laddr,
     symbol: symbol as string,
     name: name as string,
-    decimals: Number(decimals),
+    decimals,
     liquidationBonusBps,
     liquidationThresholdBps,
     ltvBps,
   };
+  console.log(`  [asset] ${laddr.slice(0, 12)}… → symbol=${info.symbol} decimals=${info.decimals} liqBonus=${info.liquidationBonusBps}`);
   upsertAsset(db, info);
   assetCache.set(laddr, info);
   return info;
@@ -198,9 +213,11 @@ async function enrichOne(
   const collateralInfo = await resolveAsset(db, mp, cfg.poolDataProvider, liq.collateral_asset);
   const debtInfo       = await resolveAsset(db, mp, cfg.poolDataProvider, liq.debt_asset);
 
-  // Oracle calls sequential — each is one eth_call, dRPC limit is 3 per batch
-  const collPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, collateralInfo.address, liq.block_number, baseCurrencyUnit, useHistorical);
-  const debtPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, debtInfo.address, liq.block_number, baseCurrencyUnit, useHistorical);
+  // Oracle calls sequential — each is one eth_call, dRPC limit is 3 per batch.
+  // hypePriceUsd is passed as override so the HYPE precompile (0x5555…5555) gets
+  // priced correctly even though the oracle contract can't handle that address.
+  const collPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, collateralInfo.address, liq.block_number, baseCurrencyUnit, useHistorical, hypePriceUsd);
+  const debtPrice = await fetchOraclePriceAtBlock(mp, cfg.oracle, debtInfo.address, liq.block_number, baseCurrencyUnit, useHistorical, hypePriceUsd);
 
   const debtToCoverHuman = Number(BigInt(liq.debt_to_cover)) / 10 ** debtInfo.decimals;
   const collAmountHuman = Number(BigInt(liq.liquidated_collateral_amount)) / 10 ** collateralInfo.decimals;
