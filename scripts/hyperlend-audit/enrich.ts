@@ -105,6 +105,18 @@ async function resolveAsset(
     return cached;
   }
 
+  // Precompile shortcut (e.g. HYPE at 0x5555...5555 returns 500 on ERC20 calls)
+  const PRECOMPILES: Record<string, { symbol: string; name: string; decimals: number }> = {
+    '0x5555555555555555555555555555555555555555': { symbol: 'HYPE', name: 'Hyperliquid', decimals: 18 },
+  };
+  if (PRECOMPILES[laddr]) {
+    const p = PRECOMPILES[laddr]!;
+    const info: AssetInfo = { address: laddr, symbol: p.symbol, name: p.name, decimals: p.decimals, liquidationBonusBps: 0, liquidationThresholdBps: 0, ltvBps: 0 };
+    upsertAsset(db, info);
+    assetCache.set(laddr, info);
+    return info;
+  }
+
   // Fetch from chain
   const erc20 = new ethers.Contract(address, ERC20_ABI, mp.provider);
   const [symbol, name, decimals] = await Promise.all([

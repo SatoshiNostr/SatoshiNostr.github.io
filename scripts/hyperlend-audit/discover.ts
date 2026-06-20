@@ -27,6 +27,14 @@ import type { DiscoveredConfig, AssetInfo } from './types';
 
 export const DISCOVERED_CONFIG_PATH = path.resolve(__dirname, 'discovered-config.json');
 
+// Known precompile / non-standard ERC20 addresses on HyperEVM.
+// These addresses don't implement symbol()/name() via standard calls —
+// the node returns 500 instead of a proper revert. Hardcode their metadata.
+const KNOWN_TOKENS: Record<string, { symbol: string; name: string; decimals: number }> = {
+  // Native HYPE sentinel address used by HyperLend as the "HYPE" reserve
+  '0x5555555555555555555555555555555555555555': { symbol: 'HYPE', name: 'Hyperliquid', decimals: 18 },
+};
+
 // ---- Helpers ----
 
 async function isContractDeployed(provider: ethers.JsonRpcProvider, address: string): Promise<boolean> {
@@ -60,14 +68,26 @@ async function fetchReserveInfo(
   reserveAddr: string,
   dataProvider: string,
 ): Promise<AssetInfo> {
-  const erc20 = new ethers.Contract(reserveAddr, ERC20_ABI, mp.provider);
   const dp = new ethers.Contract(dataProvider, DATA_PROVIDER_ABI, mp.provider);
 
-  const [symbol, name, decimals] = await Promise.all([
-    withRetry(() => erc20.symbol() as Promise<string>, `symbol(${reserveAddr})`).catch(() => 'UNKNOWN'),
-    withRetry(() => erc20.name() as Promise<string>, `name(${reserveAddr})`).catch(() => 'UNKNOWN'),
-    withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${reserveAddr})`).catch(() => 18n),
-  ]);
+  // Check known-precompile map first to avoid fruitless ERC20 calls
+  const knownMeta = KNOWN_TOKENS[reserveAddr] ?? KNOWN_TOKENS[reserveAddr.toLowerCase()];
+  let symbol: string;
+  let name: string;
+  let decimals: bigint;
+
+  if (knownMeta) {
+    symbol = knownMeta.symbol;
+    name = knownMeta.name;
+    decimals = BigInt(knownMeta.decimals);
+  } else {
+    const erc20 = new ethers.Contract(reserveAddr, ERC20_ABI, mp.provider);
+    [symbol, name, decimals] = await Promise.all([
+      withRetry(() => erc20.symbol() as Promise<string>, `symbol(${reserveAddr})`).catch(() => 'UNKNOWN'),
+      withRetry(() => erc20.name() as Promise<string>, `name(${reserveAddr})`).catch(() => 'UNKNOWN'),
+      withRetry(() => erc20.decimals() as Promise<bigint>, `decimals(${reserveAddr})`).catch(() => 18n),
+    ]);
+  }
 
   let liquidationBonusBps = 0;
   let liquidationThresholdBps = 0;

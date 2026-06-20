@@ -56,10 +56,12 @@ export async function withRetry<T>(
     } catch (err: unknown) {
       lastError = err;
       const errMsg = String(err);
-      // Don't retry on non-recoverable errors
-      if (errMsg.includes('invalid address') || errMsg.includes('call revert')) {
-        throw err;
-      }
+      // Don't retry on non-recoverable errors or node-level 500s
+      // (500 on HyperEVM precompiles = method doesn't exist, won't change on retry)
+      const noRetry = errMsg.includes('invalid address')
+        || errMsg.includes('call revert')
+        || (errMsg.includes('500') && errMsg.includes('Internal Server Error'));
+      if (noRetry) throw err;
       const delay = baseDelayMs * Math.pow(2, attempt - 1);
       const isRateLimit = errMsg.includes('429') || errMsg.includes('rate') || errMsg.includes('limit');
       const waitMs = isRateLimit ? delay * 2 : delay;
