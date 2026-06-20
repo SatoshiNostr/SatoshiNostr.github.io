@@ -21,7 +21,11 @@ export const KNOWN_ADDRESSES = {
   poolConfigurator: '0x8CB4310dD38F6fD59388C9DE225f328092bdC379',
 
   // Pool logic implementation (behind the proxy).
-  poolImplementation: '0xc19d68383Ed7AB130c15cEad839e67A7Ed9d7041',
+  // ⚠️ UPGRADABLE PROXY — verificado en hyperevmscan.io el 2026-06-20:
+  // implementación actual = 0xBEBb62C7...A92d49B06 (distinta de la original en docs).
+  // El evento LiquidationCall sigue siendo compatible Aave V3, pero confirmar
+  // el topic0 en una tx real antes de confiar en el scan.
+  poolImplementation: '0xc19d68383Ed7AB130c15cEad839e67A7Ed9d7041', // original; puede estar obsoleto
 } as const;
 
 // HyperEVM dual-block architecture (HyperBFT consensus):
