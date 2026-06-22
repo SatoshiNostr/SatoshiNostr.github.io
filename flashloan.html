@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>FlashLoan Multi-Agent</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --card: #0d1220;
+      --border: #1a2540;
+      --green: #00ff88;
+      --yellow: #f5c518;
+      --red: #ff4444;
+      --blue: #4488ff;
+      --purple: #aa44ff;
+      --text: #e0e8f0;
+      --muted: #4a5568;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 12px;
+      min-height: 100vh;
+      padding: 12px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .cycle-counter {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .cycle-counter span { color: var(--yellow); }
+
+    .timer-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 1px;
+      width: 0%;
+    }
+
+    .agents-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .agent-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      transition: border-color 0.4s;
+    }
+
+    .agent-card.scanning  { border-color: var(--blue); }
+    .agent-card.done      { border-color: var(--green); }
+    .agent-card.alert     { border-color: var(--red); }
+    .agent-card.thinking  { border-color: var(--yellow); }
+
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .agent-name {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .dot.active  { background: var(--green);  box-shadow: 0 0 6px var(--green);  animation: blink 1s infinite; }
+    .dot.thinking{ background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: blink .5s infinite; }
+    .dot.alert   { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .agent-val {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .agent-val.green  { color: var(--green); }
+    .agent-val.yellow { color: var(--yellow); }
+    .agent-val.red    { color: var(--red); }
+    .agent-val.blue   { color: var(--blue); }
+
+    .agent-lbl {
+      font-size: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .agent-det {
+      margin-top: 6px;
+      font-size: 9px;
+      color: var(--muted);
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    /* ── Orchestrator ── */
+    .orch {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+
+    .orch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .orch-title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--purple);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .badge.go       { background:rgba(0,255,136,.12); color:var(--green);  border:1px solid var(--green); }
+    .badge.nogo     { background:rgba(255,68,68,.12);  color:var(--red);    border:1px solid var(--red); }
+    .badge.analyzing{ background:rgba(245,197,24,.12); color:var(--yellow); border:1px solid var(--yellow); }
+
+    .bar-row { margin-bottom: 7px; }
+
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .bar-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .8s ease;
+      width: 0%;
+    }
+
+    .bar-fill.m { background: var(--blue); }
+    .bar-fill.b { background: var(--green); }
+    .bar-fill.r { background: var(--red); }
+    .bar-fill.i { background: var(--yellow); }
+
+    .synth-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .synth-score {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .synth-score.high { color: var(--green); }
+    .synth-score.mid  { color: var(--yellow); }
+    .synth-score.low  { color: var(--red); }
+
+    .synth-meta {
+      text-align: right;
+      font-size: 9px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    /* ── History ── */
+    .history-title {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .hist-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 9px;
+      gap: 6px;
+    }
+
+    .hist-time  { color: var(--muted); white-space: nowrap; }
+    .hist-pool  { color: var(--muted); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-score { font-weight: 700; }
+    .hist-dec   { font-weight: 700; white-space: nowrap; }
+    .hist-dec.go   { color: var(--green); }
+    .hist-dec.nogo { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ FlashLoan Agents</h1>
+  <div class="cycle-counter">CICLO <span id="cycleNum">0</span></div>
+</header>
+
+<div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+
+<div class="agents-grid">
+
+  <div class="agent-card" id="cardMarket">
+    <div class="agent-header">
+      <div class="agent-name">Market Scanner</div>
+      <div class="dot" id="dotMarket"></div>
+    </div>
+    <div class="agent-val" id="valMarket">—</div>
+    <div class="agent-lbl" id="lblMarket">spread</div>
+    <div class="agent-det" id="detMarket">—</div>
+  </div>
+
+  <div class="agent-card" id="cardBid">
+    <div class="agent-header">
+      <div class="agent-name">Bid Optimizer</div>
+      <div class="dot" id="dotBid"></div>
+    </div>
+    <div class="agent-val" id="valBid">—</div>
+    <div class="agent-lbl" id="lblBid">loan size</div>
+    <div class="agent-det" id="detBid">—</div>
+  </div>
+
+  <div class="agent-card" id="cardRisk">
+    <div class="agent-header">
+      <div class="agent-name">Risk Assessor</div>
+      <div class="dot" id="dotRisk"></div>
+    </div>
+    <div class="agent-val" id="valRisk">—</div>
+    <div class="agent-lbl" id="lblRisk">risk score</div>
+    <div class="agent-det" id="detRisk">—</div>
+  </div>
+
+  <div class="agent-card" id="cardIntel">
+    <div class="agent-header">
+      <div class="agent-name">Competitor Intel</div>
+      <div class="dot" id="dotIntel"></div>
+    </div>
+    <div class="agent-val" id="valIntel">—</div>
+    <div class="agent-lbl" id="lblIntel">mev bots</div>
+    <div class="agent-det" id="detIntel">—</div>
+  </div>
+
+</div>
+
+<div class="orch">
+  <div class="orch-header">
+    <div class="orch-title">⟁ Synthesis Orchestrator</div>
+    <div class="badge analyzing" id="badge">ANALYZING</div>
+  </div>
+
+  <div class="bar-row">
+    <div class="bar-top"><span>Market</span><span id="bvM">—</span></div>
+    <div class="bar-track"><div class="bar-fill m" id="bfM"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-top"><span>Bid</span><span id="bvB">—</span></div>
+    <div class="bar-track"><div class="bar-fill b" id="bfB"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-top"><span>Safety</span><span id="bvR">—</span></div>
+    <div class="bar-track"><div class="bar-fill r" id="bfR"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-top"><span>Intel</span><span id="bvI">—</span></div>
+    <div class="bar-track"><div class="bar-fill i" id="bfI"></div></div>
+  </div>
+
+  <div class="synth-row">
+    <div>
+      <div class="synth-score" id="synthScore">—</div>
+      <div class="agent-lbl">karpathy score</div>
+    </div>
+    <div class="synth-meta" id="synthMeta">—</div>
+  </div>
+</div>
+
+<div class="history-title">Últimos 5 runs</div>
+<div id="histList"></div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────
+const CYCLE_MS = 11000;
+const THINK_MS = 2400;
+
+const POOLS = [
+  'USDC/WETH Uni v3','WBTC/USDT Curve','ARB/ETH Camelot',
+  'DAI/USDC Aave','GLP/ETH GMX','USDT/WETH Sushi',
+  'wstETH/ETH Curve','FRAX/USDC Curve','LINK/ETH Uni v3',
+  'USDC/DAI Balancer','rETH/ETH Curve','GMX/USDC Camelot'
+];
+const BOTS = ['0x3b4f','0x7c2a','0xf1e8','0x9d3c','0x2b7a','0x5e1f','0x4d1b','0x8a0e'];
+
+// ─── Utils ────────────────────────────────────────────────────
+const rnd  = (a,b) => Math.random()*(b-a)+a;
+const pick = arr  => arr[Math.floor(Math.random()*arr.length)];
+const fmt  = (n,d=2) => Number(n).toFixed(d);
+const $    = id  => document.getElementById(id);
+
+// ─── Karpathy weighted score ──────────────────────────────────
+// market=.35, bid=.25, safety(inv risk)=.25, intel=.15
+function karpathy(m, b, r, i) {
+  return Math.min(99, Math.round(m*.35 + b*.25 + (100-r)*.25 + i*.15));
+}
+
+// ─── History ──────────────────────────────────────────────────
+let history = [];
+let cycle   = 0;
+
+function pushHistory(entry) {
+  history.unshift(entry);
+  if (history.length > 5) history.pop();
+  const list = $('histList');
+  list.innerHTML = history.map(h => `
+    <div class="hist-item">
+      <span class="hist-time">${h.ts}</span>
+      <span class="hist-pool">${h.pool}</span>
+      <span class="hist-score">${h.score}</span>
+      <span class="hist-dec ${h.go ? 'go' : 'nogo'}">${h.go ? '▶ GO' : '✕ SKIP'}</span>
+    </div>`).join('');
+}
+
+// ─── Agent render ─────────────────────────────────────────────
+function setAgent(id, {val, cls='', lbl, det, dot='active', card=''}) {
+  $('val'+id).textContent = val;
+  $('val'+id).className   = 'agent-val' + (cls ? ' '+cls : '');
+  $('lbl'+id).textContent = lbl;
+  $('det'+id).textContent = det;
+  $('dot'+id).className   = 'dot ' + dot;
+  $('card'+id).className  = 'agent-card' + (card ? ' '+card : '');
+}
+
+function setBar(sfx, pct, txt) {
+  $('bf'+sfx).style.width = pct + '%';
+  $('bv'+sfx).textContent = txt;
+}
+
+// ─── Phases ───────────────────────────────────────────────────
+function phaseThink() {
+  ['Market','Bid','Risk','Intel'].forEach(id =>
+    setAgent(id, {val:'···', lbl:'escaneando', det:'inicializando…', dot:'thinking', card:'thinking'})
+  );
+  $('badge').className = 'badge analyzing';
+  $('badge').textContent = 'ANALYZING';
+  $('synthScore').textContent = '—';
+  $('synthMeta').textContent  = '—';
+}
+
+function phaseResults() {
+  // ── Market Scanner ──────────────────────────────────
+  const spread  = rnd(.04, 3.1);
+  const pool    = pick(POOLS);
+  const block   = Math.floor(rnd(19e6, 20.5e6));
+  const mScore  = Math.min(100, Math.round(spread*38 + rnd(5,18)));
+
+  setAgent('Market', {
+    val: fmt(spread)+'%',
+    cls: spread>1.5 ? 'green' : spread>.7 ? 'yellow' : 'blue',
+    lbl: 'spread detectado',
+    det: `${pool}\nbloque: ${block.toLocaleString()}`,
+    dot: 'active',
+    card: spread>1.5 ? 'done' : 'scanning'
+  });
+
+  // ── Bid Optimizer ────────────────────────────────────
+  const loanETH  = rnd(40, 900);
+  const grossETH = loanETH * spread / 100 * rnd(.35, .88);
+  const gasETH   = rnd(.003, .02);
+  const netETH   = grossETH - gasETH;
+  const bScore   = Math.min(100, Math.round(netETH * 110 + rnd(8, 28)));
+
+  setAgent('Bid', {
+    val: fmt(loanETH,0)+' ETH',
+    cls: 'yellow',
+    lbl: 'loan size óptimo',
+    det: `net profit: ${fmt(netETH,4)} ETH\ngas: ${fmt(gasETH,4)} ETH`,
+    dot: 'active',
+    card: ''
+  });
+
+  // ── Risk Assessor ────────────────────────────────────
+  const risk    = Math.round(rnd(8, 78));
+  const slip    = rnd(.01, .9);
+  const liq     = rnd(150, 2200);
+  const flags   = [];
+  if (risk>58) flags.push('sandwich risk');
+  if (slip>.5) flags.push('high slippage');
+  if (liq<350) flags.push('low liquidity');
+
+  setAgent('Risk', {
+    val: risk,
+    cls: risk>60 ? 'red' : risk>35 ? 'yellow' : 'green',
+    lbl: 'risk score (0=safe)',
+    det: `slippage: ${fmt(slip,2)}%\nliq: $${fmt(liq,0)}K\n${flags.length ? '⚠ '+flags.join(', ') : '✓ sin flags'}`,
+    dot: risk>60 ? 'alert' : 'active',
+    card: risk>60 ? 'alert' : 'done'
+  });
+
+  // ── Competitor Intel ─────────────────────────────────
+  const bots    = Math.floor(rnd(0, 9));
+  const mempool = rnd(18, 97);
+  const iScore  = Math.max(0, Math.round(100 - bots*13 - mempool*.28));
+  const botList = Array.from({length: bots}, () => pick(BOTS));
+
+  setAgent('Intel', {
+    val: bots,
+    cls: bots>4 ? 'red' : bots>2 ? 'yellow' : 'green',
+    lbl: 'mev bots activos',
+    det: `mempool: ${fmt(mempool,0)}%\n${bots>0 ? botList.slice(0,3).join(' ') : '— zona limpia'}`,
+    dot: bots>4 ? 'alert' : 'active',
+    card: bots>4 ? 'alert' : 'done'
+  });
+
+  // ── Orchestrator ─────────────────────────────────────
+  const ks = karpathy(mScore, bScore, risk, iScore);
+  const go = ks >= 55 && risk < 65;
+
+  setBar('M', mScore, mScore);
+  setBar('B', bScore, bScore);
+  setBar('R', 100-risk, 100-risk);
+  setBar('I', iScore, iScore);
+
+  $('synthScore').textContent = ks;
+  $('synthScore').className   = 'synth-score ' + (ks>=70?'high':ks>=50?'mid':'low');
+  $('synthMeta').innerHTML    = `profit: ${fmt(netETH,4)} ETH<br>riesgo: ${risk}/100<br>bots: ${bots}`;
+
+  const badge = $('badge');
+  badge.className   = 'badge ' + (go ? 'go' : 'nogo');
+  badge.textContent = go ? '▶ EJECUTAR' : '✕ SKIP';
+
+  // Pool short name for history
+  const poolShort = pool.split(' ').slice(0,2).join(' ');
+  const ts = new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  pushHistory({ ts, pool: poolShort, score: ks, go });
+}
+
+// ─── Timer ────────────────────────────────────────────────────
+let timerRaf  = null;
+let timerBase = null;
+
+function tickTimer(ts) {
+  if (!timerBase) timerBase = ts;
+  const pct = Math.min(100, ((ts - timerBase) / CYCLE_MS) * 100);
+  $('timerFill').style.width = pct + '%';
+  if (pct < 100) timerRaf = requestAnimationFrame(tickTimer);
+}
+
+// ─── Main loop ────────────────────────────────────────────────
+function runCycle() {
+  cycle++;
+  $('cycleNum').textContent = cycle;
+
+  cancelAnimationFrame(timerRaf);
+  timerBase = null;
+  timerRaf  = requestAnimationFrame(tickTimer);
+
+  phaseThink();
+  setTimeout(phaseResults, THINK_MS);
+}
+
+runCycle();
+setInterval(runCycle, CYCLE_MS);
+</script>
+
+</body>
+</html>
