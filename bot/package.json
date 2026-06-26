@@ -1,0 +1,8 @@
+{
+  "name": "flashloan-forensics",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "dependencies": {
+    "ethers": "^6.13.0"
+  }
+}
